@@ -125,13 +125,14 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
     300|ExpireWarning|即将过期的函数执行正常
     302|ExpireWarning|即将过期的函数,表示已经接受请求,返回为一个流,且还未结束
     306|ExpireWarning|即将过期的函数,返回为一个流,且结束了
-    400|ParamError|请求的参数与签名不符
+    400|RequestError|请求错误
     401|LoginError|登录失败(口令有误)
     403|AuthError|口令权限无法访问对应函数
-    404|WrongNameError|未找到对应的函数名
-    500|RPCException|服务器异常
+    404|WrongMethodError|未找到对应的函数名
+    470|ParamError|请求的参数与签名不符
+    500|RpcException|服务器异常
     502|RequirementException|服务器的依赖服务异常,
-    503|RPCUnavailableException|服务器不可用异常,一般是在维护
+    503|RpcUnavailableException|服务器不可用异常,一般是在维护
     504|TimeoutException|服务器连接超时异常
 
 
