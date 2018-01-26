@@ -20,6 +20,8 @@ MESSAGE-PACK-RPC是一个轻量级的无状态远程过程调用(RPC)应用层�
 + 客户端向服务端推送流. 类似函数的参数是一个生成器
 + 客户端向服务端推送流,而服务端的应答也是流,类似可迭代对象的操作
 
+注意流操作依然是使用的一般的应答,而非流式服务器.
+
 
 其他的特性包括:
 
@@ -54,15 +56,31 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
 
 我们约定合法的对象包括:
 
+    + 验证请求对象
     + 自描述应答对象
     + 请求对象
     + 响应对象
     + 异常/错误对象
     + 结果对象
 
++ 连接建立时客户端发送验证信息.
+
+成功建立连接后客户端会向服务发送一个验证请求,其形式为:
+
+```json
+{
+    "MPRPC":"0.1",// string 协议版本号
+    "AUTH":{
+        "USERNAME":xxx,//string
+        "PASSWORD":xxx//string
+    }
+}
+
+```
+
 + 连接建立时服务端的自描述应答格式约定
 
-成功建立连接时回调函数会返回一个message-pack字节序列指明本rpc的基本信息,其形式为:
+成功建立连接后服务器会收到验证请求,如果请求通过则会返回一个message-pack字节序列指明本rpc的基本信息,其形式为:
 
 ```json
 {
@@ -70,7 +88,7 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
     "VERSION":"0.0.1",//string 服务的版本用于在客户端检验
     "DESC":"xxxx",// string 描述服务
     "DEBUG":true,// bool 是否使用debug模式,也就是传递的是json还是msgpack
-    "COMPRESSION":null,// enum 压缩算法,可选的有`bz2`,`zlib`,`lzma`和null
+    "COMPRESER":null,// enum 压缩算法,可选的有`bz2`,`zlib`,`lzma`和null
     "TIMEOUT":180,//number 设置的过期时间,设为0表示不设置过期时间
     "FUNCTION_LIST":[
         {
@@ -82,6 +100,16 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
     ]// array 可被调用的函数名和对应签名
 }
 ```
+
+验证失败的话则会返回
+
+```json
+{
+    "MPRPC":"0.1",// string 协议版本号
+    "CODE":501
+}
+```
+
 
 + 客户端接收到错误后的行为
 
@@ -99,6 +127,7 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
         "ID":xxxx,//string 任务id
         "METHOD": xxx,//接收到要执行的函数名
         "ARGS":xxx //(OPTION) array or object  接收到函数调用的参数,只允许为列表或者键值对的形式
+        "STREAM":
     }
     ```
 
@@ -110,34 +139,66 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
     {
         "MPRPC":"0.1",// str 协议版本号
         "CODE":200,// number 响应码,响应码反应服务器状态,
-        "MESSAGE": {} // object 对象为结果对象或者异常/错误对象
+        "MESSAGE": {} //(OPTION) object 对象为结果对象或者异常/错误对象
     }
     ```
 
     响应码含义表(参考自http协议)
 
+    + 回应请求,表述状态
+
     code|对应错误|意义
     ---|---|--
     100|---|表示初始的请求已经接受,客户应当继续发送请求的其余部分.
+
+    + 正常响应
+
+    code|对应错误|意义
+    ---|---|--
     200|---|表示执行正常,返回的结果结束
     202|---|表示已经接受请求,返回为一个流,且还未结束
     206|---|返回为一个流,且结束了
+
+
+    + 过期警告
+
+
+    code|对应错误|意义
+    ---|---|--
     300|ExpireWarning|即将过期的函数执行正常
-    302|ExpireWarning|即将过期的函数,表示已经接受请求,返回为一个流,且还未结束
-    306|ExpireWarning|即将过期的函数,返回为一个流,且结束了
+    302|ExpireStreamWarning|即将过期的函数,表示已经接受请求,返回为一个流,且还未结束
+    306|ExpireStreamDoneWarning|即将过期的函数,返回为一个流,且结束了
+
+
+    + method执行错误
+
+
+    code|对应错误|意义
+    ---|---|--
     400|RequestError|请求错误
-    401|LoginError|登录失败(口令有误)
-    403|AuthError|口令权限无法访问对应函数
-    404|WrongMethodError|未找到对应的函数名
-    470|ParamError|请求的参数与签名不符
+    401|NotFindError|未找到对应的函数
+    402|ParamError|请求的参数与签名不符
+    403|RestrictAccessError|限制访问对应函数
+    404|RuntimeError|执行错误
+    405|ResultLimitError|返回的结果超过限制的字节限制
+    
+
+    + 服务器异常
+
+    code|对应错误|意义
+    ---|---|--
     500|RpcException|服务器异常
+    501|LoginError|登录失败(口令有误)
     502|RequirementException|服务器的依赖服务异常,
     503|RpcUnavailableException|服务器不可用异常,一般是在维护
     504|TimeoutException|服务器连接超时异常
+    505|ProtocolException|协议错误
+    506|ProtocolSyntaxException|协议语法错误
 
 
     + 警告/错误异常对象约定
 
+    针对任务的错误
     ```json
     {
         ID: xxx,// string 任务id
@@ -150,6 +211,7 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
         } 
     }
     ```
+    服务器发出的错误没有message,直接通过错误码识别
 
     + 结果对象约定
 
