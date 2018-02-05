@@ -128,8 +128,10 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
         "MPRPC":"0.1",// string 协议版本号
         "ID":xxxx,//string 任务id
         "METHOD": xxx,//接收到要执行的函数名
-        "ARGS":xxx //(OPTION) array or object  接收到函数调用的参数,只允许为列表或者键值对的形式
-        "STREAM":
+        "ARGS":xxx //(OPTION) list 接收到函数调用的参数,只允许为列表形式,如果有stream则无效
+        "KWARGS":xxx //(OPTION) dict 接收到函数调用的参数,键值对的形式,如果有stream则无效
+        "STREAM":xxx // 函数的参数为一个流的一段
+        "STREAMEND":TRUE // 只有在参数是,流时才有用,表示流结束
     }
     ```
 
