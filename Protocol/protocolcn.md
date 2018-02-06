@@ -17,8 +17,6 @@ MESSAGE-PACK-RPC是一个轻量级的无状态远程过程调用(RPC)应用层�
 
 + 应答模式,一问一答. 类似函数调用
 + 服务端在获取请求后向客户端进行推送. 类似于调用一个生成器
-+ 客户端向服务端推送流. 类似函数的参数是一个生成器
-+ 客户端向服务端推送流,而服务端的应答也是流,类似可迭代对象的操作
 
 注意流操作依然是使用的一般的应答,而非流式服务器.
 
@@ -92,14 +90,6 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
     "DEBUG":true,// bool 是否使用debug模式,也就是传递的是json还是msgpack
     "COMPRESER":null,// enum 压缩算法,可选的有`bz2`,`zlib`,`lzma`和null
     "TIMEOUT":180,//number 设置的过期时间,设为0表示不设置过期时间
-    "FUNCTION_LIST":[
-        {
-            "METHOD":"get",
-            "ANNOTATIONS":{"a":'int','return':null} //类型检测用的函数声明
-        },
-        ...
-        
-    ]// array 可被调用的函数名和对应签名
 }
 ```
 
@@ -130,8 +120,6 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
         "METHOD": xxx,//接收到要执行的函数名
         "ARGS":xxx //(OPTION) list 接收到函数调用的参数,只允许为列表形式,如果有stream则无效
         "KWARGS":xxx //(OPTION) dict 接收到函数调用的参数,键值对的形式,如果有stream则无效
-        "STREAM":xxx // 函数的参数为一个流的一段
-        "STREAMEND":TRUE // 只有在参数是,流时才有用,表示流结束
     }
     ```
 
@@ -183,7 +171,7 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
     401|NotFindError|未找到对应的函数
     402|ParamError|请求的参数与签名不符
     403|RestrictAccessError|限制访问对应函数
-    404|RuntimeError|执行错误
+    404|RPCRuntimeError|执行错误
     405|ResultLimitError|返回的结果超过限制的字节限制
     
 
@@ -228,19 +216,25 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
 
 ### 服务器固有方法约定
 
-+ METHOD_HELP(method:str)->None
++ system.listMethods()
 
-    返回指定函数的说明文档
+    返回对外的函数接口
 
-
-+ METHOD_SIGNATURE(method:str)->obj
++ system.methodSignature(method:str)->obj
 
     返回指定函数的签名
 
-
-+ METHODS_LIST()->list[dict]
++ system.methodHelp(method:str)->str
 
     返回对外的函数接口
+
++ system.lenConnections()->int:
+    
+    当前的连接总数
+
++ system_lenUndoneTasks()->int:
+        
+    当前还未完成的任务数
 
 
 ### 客户端可设置参数:
@@ -257,7 +251,7 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
 + AUTH 验证信息,默认为None
 + COMPRESSION 使用什么进行压缩,默认为None
 + VERSION 服务的版本用于在客户端检验默认为None
-+ DESC 描述服务的字符串,默认None
++ DESC 描述服务的字符串,默认None,python实现可以直接返回对象的`__doc__`
 + TIMEOUT 多久没有请求就关闭连接默认为None
 + MPRPC 协议版本号,默认为最新
 
