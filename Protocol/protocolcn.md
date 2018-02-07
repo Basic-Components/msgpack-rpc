@@ -54,8 +54,7 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
 
 + 可以用于传输的对象约定
 
-我们约定合法的对象包括:
-
+    我们约定合法的对象包括:
     + 验证请求对象
     + 自描述应答对象
     + 请求对象
@@ -85,6 +84,7 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
 ```json
 {
     "MPRPC":"0.1",// string 协议版本号
+    "CODE":100,//指示允许访问
     "VERSION":"0.0.1",//string 服务的版本用于在客户端检验
     "DESC":"xxxx",// string 描述服务
     "DEBUG":true,// bool 是否使用debug模式,也就是传递的是json还是msgpack
