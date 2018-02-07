@@ -173,6 +173,7 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
     403|RestrictAccessError|限制访问对应函数
     404|RPCRuntimeError|执行错误
     405|ResultLimitError|返回的结果超过限制的字节限制
+    406|UnsupportSysMethodError|不支持的服务器固有方法
     
 
     + 服务器异常
@@ -232,7 +233,7 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
     
     当前的连接总数
 
-+ system_lenUndoneTasks()->int:
++ system.lenUndoneTasks()->int:
         
     当前还未完成的任务数
 
