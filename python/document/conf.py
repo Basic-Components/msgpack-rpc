@@ -75,7 +75,7 @@ epub_copyright = copyright
 epub_exclude_files = ['search.html']
 
 todo_include_todos = True
-url_doc_root = "xxxx"
+url_doc_root = "https://basic-components.github.io/msgpack-rpc-protocol/"
 
 
 def setup(app):
