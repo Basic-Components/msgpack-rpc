@@ -1,5 +1,5 @@
 import time
-from pymprpc import RPC
+from pymprpc.client import RPC
 
 
 def main():

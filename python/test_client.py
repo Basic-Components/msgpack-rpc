@@ -1,5 +1,5 @@
 import asyncio
-from pymprpc import AsyncRPC
+from pymprpc.client import AsyncRPC
 
 
 async def main(loop):

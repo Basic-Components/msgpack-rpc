@@ -1,5 +1,5 @@
 import platform
-from pymprpc import SimpleMprpcServer
+from pymprpc.server import SimpleMprpcServer
 if platform.system() == "Windows":
     try:
         import aio_windows_patch as asyncio
