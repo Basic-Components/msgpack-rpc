@@ -136,6 +136,8 @@
 <h3>客户端<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
 <p>客户端有两个实现,一个是使用协程接口的异步实现`AsyncRpc`,一个是同步实现.需要注意的是同步实现没有使用多线程等技术,因此无法使用心跳,也无法监控到连接过期.
 客户端调用直接使用`.`符号即可.异步客户端需要`await`一下其他都一样.</p>
+<p>当然客户端也支持使用`connect`,`close`接口手动控制连接,也提供了`reconnect`这样的接口用于重连,比如用在一些web框架中时,手动操作可能是个更好的选择.
+相比较而言,更加推荐使用异步接口,因为它功能更加全面.</p>
 <div class="section" id="id6">
 <h4>同步<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h4>
 <p>同步接口只要直接调用即可,如果返回的是流,那么获得的结果将会是一个生成器,可以通过遍历来获取全部值.</p>

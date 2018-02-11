@@ -21,7 +21,7 @@ Python客户端只支持python3.6+,并提供同步接口SyncRPC和异步接口As
 .. code:: python
 
     import asyncio
-    from pymprpc_client import AsyncRPC
+    from pymprpc.client import AsyncRPC
 
 
     async def main(loop):
@@ -55,7 +55,7 @@ Python客户端只支持python3.6+,并提供同步接口SyncRPC和异步接口As
 .. code:: python
 
     import time
-    from pymprpc import RPC
+    from pymprpc.client import RPC
 
     with RPC(addr="tcp://admin:admin@127.0.0.1:5000",
              debug=True) as rpc:

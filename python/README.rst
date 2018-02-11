@@ -1,4 +1,4 @@
-
+﻿
 pymprpc
 ===============================
 
@@ -33,7 +33,7 @@ server
 .. code:: python
 
     import platform
-    from pymprpc import SimpleMprpcServer
+    from pymprpc.server import SimpleMprpcServer
     if platform.system() == "Windows":
         try:
             import aio_windows_patch as asyncio
@@ -100,7 +100,7 @@ sync client
 .. code:: python
 
     import time
-    from pymprpc import RPC
+    from pymprpc.client import RPC
 
     with RPC(addr="tcp://admin:admin@127.0.0.1:5000",
             debug=True) as rpc:
@@ -128,7 +128,7 @@ async client
 .. code:: python
 
     import asyncio
-    from pymprpc_client import AsyncRPC
+    from pymprpc.client import AsyncRPC
 
 
     async def main(loop):
