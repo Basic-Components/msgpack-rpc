@@ -1,6 +1,19 @@
+"""定义mprpc客户端和服务器中通用的编码解码混入类.
+
++ File: encoder_decoder_mixin.py
++ Version: 0.5
++ Author: hsz
++ Email: hsz1273327@gmail.com
++ Copyright: 2018-02-08 hsz
++ License: MIT
++ History
+
+    + 2018-01-23 created by hsz
+    + 2018-01-23 version-0.5 by hsz
+"""
 try:
     import ujson as json
-except:
+except ModuleNotFoundError:
     import json
 from typing import (
     Dict,

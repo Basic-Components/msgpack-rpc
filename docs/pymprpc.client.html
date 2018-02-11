@@ -1,0 +1,755 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pymprpc.client package &#8212; pymprpc  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="pymprpc.server package" href="pymprpc.server.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pymprpc-client-package">
+<h1>pymprpc.client package<a class="headerlink" href="#pymprpc-client-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-pymprpc.client">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pymprpc.client" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="mprpcpython">
+<h3>mprpc的python客户端.<a class="headerlink" href="#mprpcpython" title="Permalink to this headline">¶</a></h3>
+<p>Python客户端只支持python3.6+,并提供同步接口SyncRPC和异步接口AsyncRPC</p>
+<ul>
+<li><p class="first">File: client.__init__.py</p>
+</li>
+<li><p class="first">Version: 0.5</p>
+</li>
+<li><p class="first">Author: hsz</p>
+</li>
+<li><p class="first">Email: <a class="reference external" href="mailto:hsz1273327&#37;&#52;&#48;gmail&#46;com">hsz1273327<span>&#64;</span>gmail<span>&#46;</span>com</a></p>
+</li>
+<li><p class="first">Copyright: 2018-02-08 hsz</p>
+</li>
+<li><p class="first">License: MIT</p>
+</li>
+<li><p class="first">History</p>
+<blockquote>
+<div><ul class="simple">
+<li>2018-01-23 created by hsz</li>
+<li>2018-02-08 version-0.5 by hsz</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<div class="section" id="id1">
+<h4>异步接口使用方法<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">pymprpc_client</span> <span class="k">import</span> <span class="n">AsyncRPC</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">loop</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncRPC</span><span class="p">(</span>
+            <span class="n">addr</span><span class="o">=</span><span class="s2">&quot;tcp://admin:admin@127.0.0.1:5000&quot;</span><span class="p">,</span>
+            <span class="n">loop</span><span class="o">=</span><span class="n">loop</span><span class="p">,</span>
+            <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">rpc</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">listMethods</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">methodSignature</span><span class="p">(</span><span class="s2">&quot;testclassmethod&quot;</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">methodHelp</span><span class="p">(</span><span class="s2">&quot;testfunc&quot;</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">lenConnections</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">lenUndoneTasks</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">testclassmethod</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">testclasscoro</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">testcoro</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">testfunc</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+        <span class="c1"># await asyncio.sleep(200)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;wait done&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">testfunc</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;end&quot;</span><span class="p">)</span>
+<span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">main</span><span class="p">(</span><span class="n">loop</span><span class="p">))</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="n">e</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id2">
+<h4>同步接口使用方法<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">pymprpc</span> <span class="k">import</span> <span class="n">RPC</span>
+
+<span class="k">with</span> <span class="n">RPC</span><span class="p">(</span><span class="n">addr</span><span class="o">=</span><span class="s2">&quot;tcp://admin:admin@127.0.0.1:5000&quot;</span><span class="p">,</span>
+         <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">rpc</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">listMethods</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">methodSignature</span><span class="p">(</span><span class="s2">&quot;testclassmethod&quot;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">methodHelp</span><span class="p">(</span><span class="s2">&quot;testfunc&quot;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">lenConnections</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">lenUndoneTasks</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">testclassmethod</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">testclasscoro</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">testcoro</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">testfunc</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+    <span class="n">agen</span> <span class="o">=</span> <span class="n">rpc</span><span class="o">.</span><span class="n">testcorogen</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">agen</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;wait done&quot;</span><span class="p">)</span>
+    <span class="c1"># rpc.close()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">testfunc</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="pymprpc.client.AsyncRPC">
+<em class="property">class </em><code class="descclassname">pymprpc.client.</code><code class="descname">AsyncRPC</code><span class="sig-paren">(</span><em>addr: str</em>, <em>loop: typing.Union[asyncio.events.AbstractEventLoop</em>, <em>NoneType] = None</em>, <em>debug: bool = False</em>, <em>compreser: typing.Union[str</em>, <em>NoneType] = None</em>, <em>heart_beat: typing.Union[int</em>, <em>NoneType] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/client/aio.html#AsyncRPC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.client.AsyncRPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="pymprpc.mixins.html#pymprpc.mixins.encoder_decoder_mixin.EncoderDecoderMixin" title="pymprpc.mixins.encoder_decoder_mixin.EncoderDecoderMixin"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.mixins.encoder_decoder_mixin.EncoderDecoderMixin</span></code></a></p>
+<p>异步的RPC客户端.</p>
+<p>可以通过设置debug=True规定传输使用json且显示中间过程中的信息.</p>
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.SEPARATOR">
+<code class="descname">SEPARATOR</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.SEPARATOR" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bytes</em> –</p>
+<ul class="simple">
+<li>协议规定的请求响应终止符</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.VERSION">
+<code class="descname">VERSION</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.VERSION" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> –</p>
+<ul class="simple">
+<li>协议版本,以`x.x`的形式表现版本</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.COMPRESERS">
+<code class="descname">COMPRESERS</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.COMPRESERS" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[str,model]</em> –</p>
+<ul class="simple">
+<li>支持的压缩解压工具</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.username">
+<code class="descname">username</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.username" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[str]</em> –</p>
+<ul class="simple">
+<li>登录远端的用户名</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.password">
+<code class="descname">password</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.password" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[str]</em> –</p>
+<ul class="simple">
+<li>登录远端的密码</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.hostname">
+<code class="descname">hostname</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.hostname" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> –</p>
+<ul class="simple">
+<li>远端的主机地址</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.port">
+<code class="descname">port</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.port" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> –</p>
+<ul class="simple">
+<li>远端的主机端口</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.loop">
+<code class="descname">loop</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.loop" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>asyncio.AbstractEventLoop</em> –</p>
+<ul class="simple">
+<li>使用的事件循环</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.debug">
+<code class="descname">debug</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> –</p>
+<ul class="simple">
+<li>是否使用debug模式</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.compreser">
+<code class="descname">compreser</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.compreser" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[str]</em> –</p>
+<ul class="simple">
+<li>是否使用压缩工具压缩传输信息,以及压缩工具是什么</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.heart_beat">
+<code class="descname">heart_beat</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.heart_beat" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[int]</em> –</p>
+<ul class="simple">
+<li>是否使用心跳机制确保连接不会因过期而断开</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.closed">
+<code class="descname">closed</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.closed" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> –</p>
+<ul class="simple">
+<li>客户端是否已经关闭或者还未开始运转</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.reader">
+<code class="descname">reader</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.reader" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>asyncio.StreamReader</em> –</p>
+<ul class="simple">
+<li>流读取对象</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.writer">
+<code class="descname">writer</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.writer" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>asyncio.StreamWriter</em> –</p>
+<ul class="simple">
+<li>流写入对象</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.tasks">
+<code class="descname">tasks</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[str,asyncio.Future]</em> –</p>
+<ul class="simple">
+<li>远端执行的任务,保存以ID为键</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.gens">
+<code class="descname">gens</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.gens" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[str,Any]</em> –</p>
+<ul class="simple">
+<li>远端执行的流返回任务,保存以ID为键</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.gens_res">
+<code class="descname">gens_res</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.gens_res" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[str,List[Any]]</em> –</p>
+<ul class="simple">
+<li>远端执行的流返回任务的结果,保存以ID为键</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.AsyncRPC.remote_info">
+<code class="descname">remote_info</code><a class="headerlink" href="#pymprpc.client.AsyncRPC.remote_info" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[str,Any]</em> –</p>
+<ul class="simple">
+<li>通过验证后返回的远端服务信息</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">COMPRESERS</code><em class="property"> = {'bz2': &lt;module 'bz2' from 'c:\\users\\87\\anaconda3\\lib\\bz2.py'&gt;, 'lzma': &lt;module 'lzma' from 'c:\\users\\87\\anaconda3\\lib\\lzma.py'&gt;, 'zlib': &lt;module 'zlib' (built-in)&gt;}</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">SEPARATOR</code><em class="property"> = b'##PRO-END##'</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">VERSION</code><em class="property"> = '0.1'</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pymprpc.client.AsyncRPC.async_query">
+<code class="descname">async_query</code><span class="sig-paren">(</span><em>methodname</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/client/aio.html#AsyncRPC.async_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.client.AsyncRPC.async_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>异步调用一个远端的函数.</p>
+<p>为调用创建一个ID,并将调用请求的方法名,参数包装为请求数据后编码为字节串发送出去.并创建一个Future对象占位.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>methodname</strong> (<em>str</em>) – <ul>
+<li>要调用的方法名</li>
+</ul>
+</li>
+<li><strong>args</strong> (<em>Any</em>) – <ul>
+<li>要调用的方法的位置参数</li>
+</ul>
+</li>
+<li><strong>kwargs</strong> (<em>Any</em>) – <ul>
+<li>要调用的方法的关键字参数</li>
+</ul>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><ul class="simple">
+<li>返回对应ID的Future对象</li>
+</ul>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(asyncio.Future)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymprpc.client.AsyncRPC.clean">
+<code class="descname">clean</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/client/aio.html#AsyncRPC.clean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.client.AsyncRPC.clean" title="Permalink to this definition">¶</a></dt>
+<dd><p>清理还在执行或者等待执行的协程.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymprpc.client.AsyncRPC.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/client/aio.html#AsyncRPC.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.client.AsyncRPC.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>关闭与远端的连接.</p>
+<p>判断标志位closed是否为False,如果是则关闭,否则不进行操作</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymprpc.client.AsyncRPC.connect">
+<code class="descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/client/aio.html#AsyncRPC.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.client.AsyncRPC.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>与远端建立连接.</p>
+<p>主要执行的操作有:
++ 将监听响应的协程_response_handler放入事件循环
++ 如果有验证信息则发送验证信息
++ 获取连接建立的返回</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymprpc.client.AsyncRPC.reconnect">
+<code class="descname">reconnect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/client/aio.html#AsyncRPC.reconnect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.client.AsyncRPC.reconnect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pymprpc.client.AsyncRPC.send_query">
+<code class="descname">send_query</code><span class="sig-paren">(</span><em>ID</em>, <em>methodname</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/client/aio.html#AsyncRPC.send_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.client.AsyncRPC.send_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>将调用请求的ID,方法名,参数包装为请求数据后编码为字节串发送出去.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ID</strong> (<em>str</em>) – <ul>
+<li>任务ID</li>
+</ul>
+</li>
+<li><strong>methodname</strong> (<em>str</em>) – <ul>
+<li>要调用的方法名</li>
+</ul>
+</li>
+<li><strong>args</strong> (<em>Any</em>) – <ul>
+<li>要调用的方法的位置参数</li>
+</ul>
+</li>
+<li><strong>kwargs</strong> (<em>Any</em>) – <ul>
+<li>要调用的方法的关键字参数</li>
+</ul>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><ul class="simple">
+<li>准确地说没有错误就会返回True</li>
+</ul>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(bool)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pymprpc.client.RPC">
+<em class="property">class </em><code class="descclassname">pymprpc.client.</code><code class="descname">RPC</code><span class="sig-paren">(</span><em>addr: str</em>, <em>debug: bool = False</em>, <em>compreser: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/client/sync.html#RPC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.client.RPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="pymprpc.mixins.html#pymprpc.mixins.encoder_decoder_mixin.EncoderDecoderMixin" title="pymprpc.mixins.encoder_decoder_mixin.EncoderDecoderMixin"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.mixins.encoder_decoder_mixin.EncoderDecoderMixin</span></code></a></p>
+<p>同步的RPC客户端.注意,是单线程实现,不支持心跳操作,也没有连接过期的检验.</p>
+<p>可以通过设置debug=True规定传输使用json且显示中间过程中的信息.</p>
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.SEPARATOR">
+<code class="descname">SEPARATOR</code><a class="headerlink" href="#pymprpc.client.RPC.SEPARATOR" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bytes</em> –</p>
+<ul class="simple">
+<li>协议规定的请求响应终止符</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.VERSION">
+<code class="descname">VERSION</code><a class="headerlink" href="#pymprpc.client.RPC.VERSION" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> –</p>
+<ul class="simple">
+<li>协议版本,以`x.x`的形式表现版本</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.COMPRESERS">
+<code class="descname">COMPRESERS</code><a class="headerlink" href="#pymprpc.client.RPC.COMPRESERS" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[str,model]</em> –</p>
+<ul class="simple">
+<li>支持的压缩解压工具</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.username">
+<code class="descname">username</code><a class="headerlink" href="#pymprpc.client.RPC.username" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[str]</em> –</p>
+<ul class="simple">
+<li>登录远端的用户名</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.password">
+<code class="descname">password</code><a class="headerlink" href="#pymprpc.client.RPC.password" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[str]</em> –</p>
+<ul class="simple">
+<li>登录远端的密码</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.hostname">
+<code class="descname">hostname</code><a class="headerlink" href="#pymprpc.client.RPC.hostname" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> –</p>
+<ul class="simple">
+<li>远端的主机地址</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.port">
+<code class="descname">port</code><a class="headerlink" href="#pymprpc.client.RPC.port" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> –</p>
+<ul class="simple">
+<li>远端的主机端口</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.debug">
+<code class="descname">debug</code><a class="headerlink" href="#pymprpc.client.RPC.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> –</p>
+<ul class="simple">
+<li>是否使用debug模式</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.compreser">
+<code class="descname">compreser</code><a class="headerlink" href="#pymprpc.client.RPC.compreser" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[str]</em> –</p>
+<ul class="simple">
+<li>是否使用压缩工具压缩传输信息,以及压缩工具是什么</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.closed">
+<code class="descname">closed</code><a class="headerlink" href="#pymprpc.client.RPC.closed" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool</em> –</p>
+<ul class="simple">
+<li>客户端是否已经关闭或者还未开始运转</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.reader">
+<code class="descname">reader</code><a class="headerlink" href="#pymprpc.client.RPC.reader" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>asyncio.StreamReader</em> –</p>
+<ul class="simple">
+<li>流读取对象</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.writer">
+<code class="descname">writer</code><a class="headerlink" href="#pymprpc.client.RPC.writer" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>asyncio.StreamWriter</em> –</p>
+<ul class="simple">
+<li>流写入对象</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.tasks">
+<code class="descname">tasks</code><a class="headerlink" href="#pymprpc.client.RPC.tasks" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[str,asyncio.Future]</em> –</p>
+<ul class="simple">
+<li>远端执行的任务,保存以ID为键</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.gens">
+<code class="descname">gens</code><a class="headerlink" href="#pymprpc.client.RPC.gens" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[str,Any]</em> –</p>
+<ul class="simple">
+<li>远端执行的流返回任务,保存以ID为键</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.gens_res">
+<code class="descname">gens_res</code><a class="headerlink" href="#pymprpc.client.RPC.gens_res" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[str,List[Any]]</em> –</p>
+<ul class="simple">
+<li>远端执行的流返回任务的结果,保存以ID为键</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pymprpc.client.RPC.remote_info">
+<code class="descname">remote_info</code><a class="headerlink" href="#pymprpc.client.RPC.remote_info" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Dict[str,Any]</em> –</p>
+<ul class="simple">
+<li>通过验证后返回的远端服务信息</li>
+</ul>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">COMPRESERS</code><em class="property"> = {'bz2': &lt;module 'bz2' from 'c:\\users\\87\\anaconda3\\lib\\bz2.py'&gt;, 'lzma': &lt;module 'lzma' from 'c:\\users\\87\\anaconda3\\lib\\lzma.py'&gt;, 'zlib': &lt;module 'zlib' (built-in)&gt;}</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">SEPARATOR</code><em class="property"> = b'##PRO-END##'</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">VERSION</code><em class="property"> = '0.1'</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pymprpc.client.RPC.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/client/sync.html#RPC.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.client.RPC.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>关闭与远端的连接.</p>
+<p>判断标志位closed是否为False,如果是则关闭,否则不进行操作</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymprpc.client.RPC.connect">
+<code class="descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/client/sync.html#RPC.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.client.RPC.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>与远端建立连接,并进行验证身份.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymprpc.client.RPC.query">
+<code class="descname">query</code><span class="sig-paren">(</span><em>methodname</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/client/sync.html#RPC.query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.client.RPC.query" title="Permalink to this definition">¶</a></dt>
+<dd><p>异步调用一个远端的函数.</p>
+<p>为调用创建一个ID,并将调用请求的方法名,参数包装为请求数据后编码为字节串发送出去.并创建一个Future对象占位.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>methodname</strong> (<em>str</em>) – <ul>
+<li>要调用的方法名</li>
+</ul>
+</li>
+<li><strong>args</strong> (<em>Any</em>) – <ul>
+<li>要调用的方法的位置参数</li>
+</ul>
+</li>
+<li><strong>kwargs</strong> (<em>Any</em>) – <ul>
+<li>要调用的方法的关键字参数</li>
+</ul>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><ul class="simple">
+<li>返回对应ID的Future对象</li>
+</ul>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(asyncio.Future)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pymprpc.client.RPC.reconnect">
+<code class="descname">reconnect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/client/sync.html#RPC.reconnect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.client.RPC.reconnect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pymprpc.client.RPC.send_query">
+<code class="descname">send_query</code><span class="sig-paren">(</span><em>ID</em>, <em>methodname</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/client/sync.html#RPC.send_query"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.client.RPC.send_query" title="Permalink to this definition">¶</a></dt>
+<dd><p>将调用请求的ID,方法名,参数包装为请求数据后编码为字节串发送出去.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ID</strong> (<em>str</em>) – <ul>
+<li>任务ID</li>
+</ul>
+</li>
+<li><strong>methodname</strong> (<em>str</em>) – <ul>
+<li>要调用的方法名</li>
+</ul>
+</li>
+<li><strong>args</strong> (<em>Any</em>) – <ul>
+<li>要调用的方法的位置参数</li>
+</ul>
+</li>
+<li><strong>kwargs</strong> (<em>Any</em>) – <ul>
+<li>要调用的方法的关键字参数</li>
+</ul>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><ul class="simple">
+<li>准确地说没有错误就会返回True</li>
+</ul>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(bool)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">pymprpc.client package</a><ul>
+<li><a class="reference internal" href="#module-pymprpc.client">Module contents</a><ul>
+<li><a class="reference internal" href="#mprpcpython">mprpc的python客户端.</a><ul>
+<li><a class="reference internal" href="#id1">异步接口使用方法</a></li>
+<li><a class="reference internal" href="#id2">同步接口使用方法</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="pymprpc.server.html" title="previous chapter">pymprpc.server package</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/pymprpc.client.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, hsz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/pymprpc.client.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

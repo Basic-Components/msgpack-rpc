@@ -1,0 +1,310 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Welcome to pymprpc’s documentation! &#8212; pymprpc  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MESSAGE-PACK-RPC" href="protocolcn.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-pymprpc-s-documentation">
+<h1>Welcome to pymprpc’s documentation!<a class="headerlink" href="#welcome-to-pymprpc-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>这是Message-pack Rpc的一个python实现,</p>
+<div class="section" id="id1">
+<h2>协议内容<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="protocolcn.html">MESSAGE-PACK-RPC</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="protocolcn.html#">概述</a></li>
+<li class="toctree-l2"><a class="reference internal" href="protocolcn.html#">流程约定</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="protocolcn.html#">连接建立</a></li>
+<li class="toctree-l3"><a class="reference internal" href="protocolcn.html#">发送调用请求</a></li>
+<li class="toctree-l3"><a class="reference internal" href="protocolcn.html#">关闭连接</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="protocolcn.html#">数据形式约定</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="protocolcn.html#">服务器固有方法约定</a></li>
+<li class="toctree-l3"><a class="reference internal" href="protocolcn.html#">客户端可设置参数:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="protocolcn.html#">服务器可设置参数:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="id2">
+<h2>安装<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>pip install pymprpc</p>
+</div>
+<div class="section" id="id3">
+<h2>使用方式<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<p>这个rpc的实现参考了标准库xmlrpc,通过特定的注册函数,注册装饰器实现对函数的注册.
+客户端和服务端都可以通过上下文管理器或者异步上下文管理连接.</p>
+<div class="section" id="id4">
+<h3>服务器端<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<p>要注册函数需要先有一个服务器实例,我们通常使用上下文管理器来创建服务器实例,
+并在上下文中让服务器执行,以便在关闭服务器时可以比较简单的回收资源.</p>
+<p>其中:</p>
+<ul class="simple">
+<li>register_introspection_functions 用于注册默认定义的自省函数</li>
+<li>register_function 装饰器,用于装饰函数,协程函数,或者异步生成器函数,将他们注册到可以调用的位置.</li>
+<li>register_instance 用于注册某个类的实例,会将其中的公开函数都注册到可调用位置.</li>
+</ul>
+<p>要启动服务器,则可以执行`run_forever`方法.当要退出的时候,上下文管理器会自己关闭服务并做清理工作.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">MyMPRPCServer</span><span class="p">((</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="mi">5000</span><span class="p">),</span> <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">server</span><span class="p">:</span>
+    <span class="n">server</span><span class="o">.</span><span class="n">register_introspection_functions</span><span class="p">()</span>
+
+    <span class="nd">@server</span><span class="o">.</span><span class="n">register_function</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">testfunc</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;有help</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+    <span class="nd">@server</span><span class="o">.</span><span class="n">register_function</span><span class="p">()</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">testcoro</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+    <span class="nd">@server</span><span class="o">.</span><span class="n">register_function</span><span class="p">()</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">testcorogen</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">i</span> <span class="o">+</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+    <span class="k">class</span> <span class="nc">TestClass</span><span class="p">:</span>
+
+        <span class="k">def</span> <span class="nf">testclassmethod</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+        <span class="k">async</span> <span class="k">def</span> <span class="nf">testclasscoro</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+        <span class="k">async</span> <span class="k">def</span> <span class="nf">testclasscorogen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+                <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">i</span> <span class="o">+</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">TestClass</span><span class="p">()</span>
+    <span class="n">server</span><span class="o">.</span><span class="n">register_instance</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">server</span><span class="o">.</span><span class="n">run_forever</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>需要注意的是:</p>
+<ul class="simple">
+<li>返回流的情况只支持异步生成器</li>
+<li>注册的函数默认使用多进程执行器执行,以防止cpu密集型任务阻塞事件循环.</li>
+<li>服务并没有提供多进程实现,这主要是因为协程对io的利用率已经很高,对于RPC来说已经很足够.如果返回延迟高应该是计算密集型任务占用事件过长.</li>
+</ul>
+</div>
+<div class="section" id="id5">
+<h3>客户端<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<p>客户端有两个实现,一个是使用协程接口的异步实现`AsyncRpc`,一个是同步实现.需要注意的是同步实现没有使用多线程等技术,因此无法使用心跳,也无法监控到连接过期.
+客户端调用直接使用`.`符号即可.异步客户端需要`await`一下其他都一样.</p>
+<div class="section" id="id6">
+<h4>同步<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h4>
+<p>同步接口只要直接调用即可,如果返回的是流,那么获得的结果将会是一个生成器,可以通过遍历来获取全部值.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">RPC</span><span class="p">(</span><span class="n">addr</span><span class="o">=</span><span class="s2">&quot;tcp://admin:admin@127.0.0.1:5000&quot;</span><span class="p">,</span>
+         <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">rpc</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">listMethods</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">methodSignature</span><span class="p">(</span><span class="s2">&quot;testclassmethod&quot;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">methodHelp</span><span class="p">(</span><span class="s2">&quot;testfunc&quot;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">lenConnections</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">lenUndoneTasks</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">testclassmethod</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">testclasscoro</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">testcoro</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">testfunc</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+    <span class="n">agen</span> <span class="o">=</span> <span class="n">rpc</span><span class="o">.</span><span class="n">testcorogen</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">agen</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id7">
+<h4>异步<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h4>
+<p>异步接口有一个需要注意的点,就是如果返回的是流,那么会被包装成一个异步生成器,
+需要使用`async for`语句来调用.</p>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">with</span> <span class="n">AsyncRPC</span><span class="p">(</span>
+        <span class="n">addr</span><span class="o">=</span><span class="s2">&quot;tcp://admin:admin@127.0.0.1:5000&quot;</span><span class="p">,</span>
+        <span class="n">loop</span><span class="o">=</span><span class="n">loop</span><span class="p">,</span>
+        <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">heart_beat</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span> <span class="k">as</span> <span class="n">rpc</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">listMethods</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">methodSignature</span><span class="p">(</span><span class="s2">&quot;testclassmethod&quot;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">methodHelp</span><span class="p">(</span><span class="s2">&quot;testfunc&quot;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">lenConnections</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">lenUndoneTasks</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">testclassmethod</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">testclasscoro</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">testcoro</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">testfunc</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+    <span class="n">agen</span> <span class="o">=</span> <span class="k">await</span> <span class="n">rpc</span><span class="o">.</span><span class="n">testcorogen</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">async</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">agen</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="todo">
+<h2>TODO<a class="headerlink" href="#todo" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>负载均衡中间件</li>
+</ul>
+</div>
+<div class="section" id="api">
+<h2>API:<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<p>Server:</p>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pymprpc.server.html">pymprpc.server package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pymprpc.server.html#module-pymprpc.server">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pymprpc.server.html#mprpcpython">mprpc的python服务端.</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pymprpc.server.html#id1">使用方式</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<p>Client:</p>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pymprpc.client.html">pymprpc.client package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pymprpc.client.html#module-pymprpc.client">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pymprpc.client.html#mprpcpython">mprpc的python客户端.</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="pymprpc.client.html#id1">异步接口使用方法</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pymprpc.client.html#id2">同步接口使用方法</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to pymprpc’s documentation!</a><ul>
+<li><a class="reference internal" href="#id1">协议内容</a></li>
+<li><a class="reference internal" href="#id2">安装</a></li>
+<li><a class="reference internal" href="#id3">使用方式</a><ul>
+<li><a class="reference internal" href="#id4">服务器端</a></li>
+<li><a class="reference internal" href="#id5">客户端</a><ul>
+<li><a class="reference internal" href="#id6">同步</a></li>
+<li><a class="reference internal" href="#id7">异步</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#todo">TODO</a></li>
+<li><a class="reference internal" href="#api">API:</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="protocolcn.html" title="next chapter">MESSAGE-PACK-RPC</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, hsz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

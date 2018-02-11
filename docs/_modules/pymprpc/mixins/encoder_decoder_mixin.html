@@ -1,0 +1,176 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pymprpc.mixins.encoder_decoder_mixin &#8212; pymprpc  documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pymprpc.mixins.encoder_decoder_mixin</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;定义mprpc客户端和服务器中通用的编码解码混入类.</span>
+
+<span class="sd">+ File: encoder_decoder_mixin.py</span>
+<span class="sd">+ Version: 0.5</span>
+<span class="sd">+ Author: hsz</span>
+<span class="sd">+ Email: hsz1273327@gmail.com</span>
+<span class="sd">+ Copyright: 2018-02-08 hsz</span>
+<span class="sd">+ License: MIT</span>
+<span class="sd">+ History</span>
+
+<span class="sd">    + 2018-01-23 created by hsz</span>
+<span class="sd">    + 2018-01-23 version-0.5 by hsz</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">ujson</span> <span class="k">as</span> <span class="nn">json</span>
+<span class="k">except</span> <span class="n">ModuleNotFoundError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Any</span>
+<span class="p">)</span>
+<span class="kn">import</span> <span class="nn">msgpack</span>
+<span class="kn">from</span> <span class="nn">pymprpc.errors</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">ProtocolException</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="EncoderDecoderMixin"><a class="viewcode-back" href="../../../pymprpc.mixins.html#pymprpc.mixins.encoder_decoder_mixin.EncoderDecoderMixin">[docs]</a><span class="k">class</span> <span class="nc">EncoderDecoderMixin</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;编码解码混入类,用于从读入的字节串中解码出数据,或者将数据编码为字节串.</span>
+
+<span class="sd">    需要被混入的类中有:</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">        SEPARATOR (bytes): - 用于标明读取字节终止符</span>
+<span class="sd">        VERSION (str): - 标识协议版本</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="EncoderDecoderMixin.encoder"><a class="viewcode-back" href="../../../pymprpc.mixins.html#pymprpc.mixins.encoder_decoder_mixin.EncoderDecoderMixin.encoder">[docs]</a>    <span class="k">def</span> <span class="nf">encoder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;编码请求为bytes.</span>
+
+<span class="sd">        检查是否使用debug模式和是否对数据进行压缩.之后根据状态将python字典形式的请求编码为字节串.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            query (Dict[str, Any]): - python字典形式的请求数据</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            (bytes): - 请求的字节串</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">queryb</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+                <span class="n">query</span><span class="p">,</span>
+                <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">queryb</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">packb</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compreser</span><span class="p">:</span>
+            <span class="n">queryb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compreser</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">queryb</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">queryb</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">SEPARATOR</span></div>
+
+<div class="viewcode-block" id="EncoderDecoderMixin.decoder"><a class="viewcode-back" href="../../../pymprpc.mixins.html#pymprpc.mixins.encoder_decoder_mixin.EncoderDecoderMixin.decoder">[docs]</a>    <span class="k">def</span> <span class="nf">decoder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;编码请求为bytes.</span>
+
+<span class="sd">        检查是否使用debug模式和是否对数据进行压缩.之后根据状态将python字典形式的请求编码为字节串.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            response (bytes): - 响应的字节串编码</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            (Dict[str, Any]): - python字典形式的响应</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">response</span><span class="p">[:</span><span class="o">-</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SEPARATOR</span><span class="p">))]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compreser</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compreser</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">msgpack</span><span class="o">.</span><span class="n">unpackb</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="n">version</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;MPRPC&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="ow">and</span> <span class="n">version</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">VERSION</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">response</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ProtocolException</span><span class="p">(</span><span class="s2">&quot;Wrong Protocol&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, hsz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

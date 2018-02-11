@@ -6,7 +6,8 @@ async def main(loop):
     async with AsyncRPC(
             addr="tcp://admin:admin@127.0.0.1:5000",
             loop=loop,
-            debug=True) as rpc:
+            debug=True,
+            heart_beat=40) as rpc:
         print(await rpc.system.listMethods())
         print(await rpc.system.methodSignature("testclassmethod"))
         print(await rpc.system.methodHelp("testfunc"))
@@ -19,9 +20,9 @@ async def main(loop):
         agen = await rpc.testcorogen(1, 2)
         async for i in agen:
             print(i)
-
         await asyncio.sleep(200)
         print("wait done")
+        rpc.close()
 
         # print(await rpc.testfunc())
 

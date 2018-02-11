@@ -1,0 +1,409 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>MESSAGE-PACK-RPC &#8212; pymprpc  documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="pymprpc.server package" href="pymprpc.server.html" />
+    <link rel="prev" title="Welcome to pymprpc’s documentation!" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="message-pack-rpc">
+<span id="message-pack-rpc"></span><h1>MESSAGE-PACK-RPC<a class="headerlink" href="#message-pack-rpc" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li>起始时间:2018-1-22</li>
+<li>版本:0.1</li>
+<li>作者:hsz</li>
+</ul>
+<div class="section" id="">
+<span id="id1"></span><h2>概述<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h2>
+<p>MESSAGE-PACK-RPC是一个轻量级的无状态远程过程调用(RPC)应用层协议.它参考自JSON-RPC 2.0协议,
+但它是独立的也不向JSON-RPC协议兼容.</p>
+<p>本规范主要定义了一些数据结构及其相关的处理规则.它允许运行在基于tcp协议的消息传输环境中,
+使用messagepack作为序列化和反序列化数据格式进行通信.</p>
+<p>与json-rpc不同,message-pack-rpc的个请求形式可以有</p>
+<ul class="simple">
+<li>应答模式,一问一答. 类似函数调用</li>
+<li>服务端在获取请求后向客户端进行推送. 类似于调用一个生成器</li>
+</ul>
+<p>注意流操作依然是使用的一般的应答,而非流式服务器.</p>
+<p>其他的特性包括:</p>
+<ul class="simple">
+<li>服务器端对连接建立的客户端可以有权限检验,也就是说可以设定口令</li>
+<li>客户端主动关闭连接,服务端可以设置过期时间主动断开连接,默认为180秒.</li>
+<li>允许设置客户端类型检查默认为True</li>
+<li>允许客户端设定心跳以维持连接不会过期断开.默认为False</li>
+<li>支持使用json替代message-pack,该模式为DEBUG模式,默认不使用DEBUG模式</li>
+<li>可以在通信中进行使用<code class="docutils literal"><span class="pre">bz2</span></code>或者<code class="docutils literal"><span class="pre">zlib</span></code>或者<code class="docutils literal"><span class="pre">lzma</span></code>进行数据压缩.</li>
+<li>协议不支持批量调用.</li>
+</ul>
+</div>
+<div class="section" id="">
+<span id="id2"></span><h2>流程约定<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="">
+<span id="id3"></span><h3>连接建立<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>连接建立后无论是否有验证需求,客户端都会向服务器发送一条验证请求,</p>
+<ul class="simple">
+<li>如果服务端有验证信息,则会根据验证信息判断是否合法<ul>
+<li>如果合法,那么返回一条信息用于响应验证请求</li>
+<li>如果不合法,那么返回验证错误</li>
+</ul>
+</li>
+<li>如果服务端没有验证信息<ul>
+<li>如果验证信息都为空,直接返回响应</li>
+<li>如果信息不为空,那么返回验证错误</li>
+</ul>
+</li>
+</ul>
+<p>如果验证未通过,客户端会抛出验证错误异常,如果验证通过了就可以继续发送其他请求</p>
+</div>
+<div class="section" id="">
+<span id="id4"></span><h3>发送调用请求<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>验证请求通过后客户端才可以发送调用请求,请求接收后会检测</p>
+<ul class="simple">
+<li>函数是否被注册存在</li>
+<li>函数的参数是否与签名匹配</li>
+</ul>
+<p>执行成功后会返回结果,失败则返回错误.而客户端收到结果后进行解析,如果是错误则解析出来抛出对应的错误</p>
+</div>
+<div class="section" id="">
+<span id="id5"></span><h3>关闭连接<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<p>关闭连接有两种情况</p>
+<ul>
+<li><p class="first">客户端主动关闭连接</p>
+<p>客户端应该在请求完毕后主动关闭连接.这并不需要额外的请求,直接关闭即可,服务器端收到EOF标识后会自动清理这个连接</p>
+</li>
+<li><p class="first">连接过期服务器关闭连接</p>
+<p>服务器每次写操作都会更新一个最近响应时间,如果长时间没有响应时间,则连接过期,服务器端主动关闭这个连接并向客户端发送一个超时错误.客户端收到超时错误消息后会抛出对应错误.默认的超时时间为180s</p>
+<p>如果想要一直保持连接,则需要客户端每隔一段时间发送一个心跳’ping’给服务器,服务器会响应’pong’同时刷新最近响应时间来避免超时.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="">
+<span id="id6"></span><h2>数据形式约定<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h2>
+<p>所有的出传输都以长连接的形式构建,没条请求以b<code class="docutils literal"><span class="pre">##PRO-END##</span></code>作为终止符</p>
+<p>数据形式约定分为如下几个层次:</p>
+<ul class="simple">
+<li>传输数据类型和关键字格式约定</li>
+</ul>
+<p>JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个结构化类型(Objects和Arrays).而我们的message-pack也是以这6种基本类型为基础.</p>
+<p>我们规定rpc注册的函数的参数和返回值也只能在这6种类型.且要求参数和返回值中的Object不允许嵌套</p>
+<p>同时规定必须使用英文大写单词标识协议用到的字段,而协议预设的函数名也必须是大写.</p>
+<ul>
+<li><p class="first">可以用于传输的对象约定</p>
+<p>我们约定合法的对象包括:</p>
+<ul class="simple">
+<li>验证请求对象</li>
+<li>自描述应答对象</li>
+<li>心跳请求与应答对象</li>
+<li>函数调用请求和响应对象</li>
+<li>异常/错误对象</li>
+<li>结果对象</li>
+</ul>
+</li>
+<li><p class="first">连接建立时客户端发送验证信息.</p>
+<p>成功建立连接后客户端会向服务发送一个验证请求,其形式为:</p>
+<div class="highlight-json"><div class="highlight"><pre><span></span>{
+    &quot;MPRPC&quot;:&quot;0.1&quot;,// string 协议版本号
+    &quot;AUTH&quot;:{
+        &quot;USERNAME&quot;:xxx,//string
+        &quot;PASSWORD&quot;:xxx//string
+    }
+}
+
+</pre></div>
+</div>
+</li>
+<li><p class="first">连接建立时服务端的自描述应答格式约定</p>
+<p>成功建立连接后服务器会收到验证请求,如果请求通过则会返回一个message-pack字节序列指明本rpc的基本信息,其形式为:</p>
+<div class="highlight-json"><div class="highlight"><pre><span></span>{
+    &quot;MPRPC&quot;:&quot;0.1&quot;,// string 协议版本号
+    &quot;CODE&quot;:100,//指示允许访问
+    &quot;VERSION&quot;:&quot;0.0.1&quot;,//string 服务的版本用于在客户端检验
+    &quot;DESC&quot;:&quot;xxxx&quot;,// string 描述服务
+    &quot;DEBUG&quot;:true,// bool 是否使用debug模式,也就是传递的是json还是msgpack
+    &quot;COMPRESER&quot;:null,// enum 压缩算法,可选的有`bz2`,`zlib`,`lzma`和null
+    &quot;TIMEOUT&quot;:180,//number 设置的过期时间,设为0表示不设置过期时间
+}
+</pre></div>
+</div>
+<p>验证失败的话则会返回</p>
+<div class="highlight-json"><div class="highlight"><pre><span></span>{
+    &quot;MPRPC&quot;:&quot;0.1&quot;,// string 协议版本号
+    &quot;CODE&quot;:501
+}
+</pre></div>
+</div>
+</li>
+<li><p class="first">客户端接收到错误后的行为</p>
+<p>客户端接收到错误后会先关闭连接然后抛出对应异常</p>
+</li>
+<li><p class="first">由客户端关闭连接后服务端的行为</p>
+<p>客户端关闭连接属于正常行为,没有额外动作</p>
+</li>
+<li><p class="first">心跳请求对象约定</p>
+<div class="highlight-json"><div class="highlight"><pre><span></span>{
+    &quot;MPRPC&quot;:&quot;0.1&quot;,// string 协议版本号
+    &quot;HEARTBEAT&quot;:&quot;ping&quot;
+}
+</pre></div>
+</div>
+</li>
+<li><p class="first">心跳请求对象约定</p>
+<div class="highlight-json"><div class="highlight"><pre><span></span>{
+    &quot;MPRPC&quot;:&quot;0.1&quot;,// string 协议版本号
+    &quot;CODE&quot;:101,
+    &quot;HEARTBEAT&quot;:&quot;pong&quot;
+}
+</pre></div>
+</div>
+</li>
+</ul>
+<ul>
+<li><p class="first">请求对象约定</p>
+<div class="highlight-json"><div class="highlight"><pre><span></span>{
+    &quot;MPRPC&quot;:&quot;0.1&quot;,// string 协议版本号
+    &quot;ID&quot;:xxxx,//string 任务id
+    &quot;METHOD&quot;: xxx,//接收到要执行的函数名
+    &quot;ARGS&quot;:xxx //(OPTION) list 接收到函数调用的参数,只允许为列表形式,如果有stream则无效
+    &quot;KWARGS&quot;:xxx //(OPTION) dict 接收到函数调用的参数,键值对的形式,如果有stream则无效
+}
+</pre></div>
+</div>
+</li>
+<li><p class="first">响应对象约定</p>
+<p>当发起一个rpc调用时，除通知之外，服务端都必须回复响应。响应表示为一个JSON对象，使用以下成员：</p>
+<div class="highlight-json"><div class="highlight"><pre><span></span>{
+    &quot;MPRPC&quot;:&quot;0.1&quot;,// str 协议版本号
+    &quot;CODE&quot;:200,// number 响应码,响应码反应服务器状态,
+    &quot;MESSAGE&quot;: {} //(OPTION) object 对象为结果对象或者异常/错误对象
+}
+</pre></div>
+</div>
+<p>响应码含义表(参考自http协议)</p>
+<ul class="simple">
+<li>服务器回应,表述状态</li>
+</ul>
+<p>code|对应错误|意义
+—|—|–
+100|—|表示初始的请求已经接受,客户应当继续发送请求的其余部分.
+101|—|表示响应为一个心跳</p>
+<ul class="simple">
+<li>正常响应</li>
+</ul>
+<p>code|对应错误|意义
+—|—|–
+200|—|表示执行正常,返回的结果结束
+201|—|表示已经接受请求,且返回为一个流
+202|—|表示返回一个流的内容
+206|—|返回的流结束了</p>
+<ul class="simple">
+<li>过期警告</li>
+</ul>
+<p>code|对应错误|意义
+—|—|–
+300|ExpireWarning|即将过期的函数执行正常
+301|ExpireStreamWarning|即将过期的函数,表示已经接受请求,且返回为一个流</p>
+<ul class="simple">
+<li>method执行错误</li>
+</ul>
+<p>code|对应错误|意义
+—|—|–
+400|RequestError|请求错误
+401|NotFindError|未找到对应的函数
+402|ParamError|请求的参数与签名不符
+403|RestrictAccessError|限制访问对应函数
+404|RPCRuntimeError|执行错误
+405|ResultLimitError|返回的结果超过限制的字节限制
+406|UnsupportSysMethodError|不支持的服务器固有方法</p>
+<ul class="simple">
+<li>服务器异常</li>
+</ul>
+<p>code|对应错误|意义
+—|—|–
+500|RpcException|服务器异常
+501|LoginError|登录失败(口令有误)
+502|RequirementException|服务器的依赖服务异常,
+503|RpcUnavailableException|服务器不可用异常,一般是在维护
+504|TimeoutException|服务器连接超时异常
+505|ProtocolException|协议错误
+506|ProtocolSyntaxException|协议语法错误</p>
+<ul class="simple">
+<li>警告/错误异常对象约定</li>
+</ul>
+<p>针对任务的错误</p>
+<div class="highlight-json"><div class="highlight"><pre><span></span>{
+    ID: xxx,// string 任务id
+    EXCEPTION: xxx// string  服务器端错误/异常类型名
+    MESSAGE: xxxx,// string or array or object 错误描述文字
+    DATA: {//(OPTION) 错误的附加信息,由服务器决定,下面的是参考字段
+        METHOD: //(OPTION)接收到要执行的函数名
+        ARGS: //(OPTION)接收到函数调用的参数
+        FRAME: //(OPTION)错误的帧信息
+    }
+}
+</pre></div>
+</div>
+<p>服务器发出的错误没有message,直接通过错误码识别</p>
+<ul class="simple">
+<li>结果对象约定</li>
+</ul>
+<div class="highlight-json"><div class="highlight"><pre><span></span>{
+    ID: xxx,// string 任务id
+    RESULT: xxx// any  返回的结果
+}
+</pre></div>
+</div>
+</li>
+</ul>
+<div class="section" id="">
+<span id="id7"></span><h3>服务器固有方法约定<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first">system.listMethods()</p>
+<p>返回对外的函数接口</p>
+</li>
+<li><p class="first">system.methodSignature(method:str)-&gt;obj</p>
+<p>返回指定函数的签名</p>
+</li>
+<li><p class="first">system.methodHelp(method:str)-&gt;str</p>
+<p>返回对外的函数接口</p>
+</li>
+<li><p class="first">system.lenConnections()-&gt;int:</p>
+<p>当前的连接总数</p>
+</li>
+<li><p class="first">system.lenUndoneTasks()-&gt;int:</p>
+<p>当前还未完成的任务数</p>
+</li>
+</ul>
+</div>
+<div class="section" id="">
+<span id="id8"></span><h3>客户端可设置参数:<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>host  主机</li>
+<li>port  端口</li>
+<li>auth  验证信息,默认为None</li>
+<li>remote_version 远程服务的版本号,默认为None</li>
+<li>heart_beat 默认为False</li>
+</ul>
+</div>
+<div class="section" id="">
+<span id="id9"></span><h3>服务器可设置参数:<a class="headerlink" href="#" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>DEBUG 是否使用debug模式,默认为False</li>
+<li>AUTH 验证信息,默认为None</li>
+<li>COMPRESSION 使用什么进行压缩,默认为None</li>
+<li>VERSION 服务的版本用于在客户端检验默认为None</li>
+<li>DESC 描述服务的字符串,默认None,python实现可以直接返回对象的<code class="docutils literal"><span class="pre">__doc__</span></code></li>
+<li>TIMEOUT 多久没有请求就关闭连接默认为None</li>
+<li>MPRPC 协议版本号,默认为最新</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">MESSAGE-PACK-RPC</a><ul>
+<li><a class="reference internal" href="#">概述</a></li>
+<li><a class="reference internal" href="#">流程约定</a><ul>
+<li><a class="reference internal" href="#">连接建立</a></li>
+<li><a class="reference internal" href="#">发送调用请求</a></li>
+<li><a class="reference internal" href="#">关闭连接</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#">数据形式约定</a><ul>
+<li><a class="reference internal" href="#">服务器固有方法约定</a></li>
+<li><a class="reference internal" href="#">客户端可设置参数:</a></li>
+<li><a class="reference internal" href="#">服务器可设置参数:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to pymprpc’s documentation!</a></li>
+      <li>Next: <a href="pymprpc.server.html" title="next chapter">pymprpc.server package</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/protocolcn.md.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, hsz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/protocolcn.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

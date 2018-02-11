@@ -1,0 +1,560 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>pymprpc.client.sync &#8212; pymprpc  documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pymprpc.client.sync</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;定义阻塞环境下使用的mprpc的客户端.</span>
+
+<span class="sd">+ File: sync.py</span>
+<span class="sd">+ Version: 0.5</span>
+<span class="sd">+ Author: hsz</span>
+<span class="sd">+ Email: hsz1273327@gmail.com</span>
+<span class="sd">+ Copyright: 2018-02-08 hsz</span>
+<span class="sd">+ License: MIT</span>
+<span class="sd">+ History</span>
+
+<span class="sd">    + 2018-01-23 created by hsz</span>
+<span class="sd">    + 2018-02-08 version-0.5 by hsz</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span> <span class="nn">zlib</span>
+<span class="kn">import</span> <span class="nn">bz2</span>
+<span class="kn">import</span> <span class="nn">lzma</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">telnetlib</span> <span class="k">import</span> <span class="n">Telnet</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">Dict</span><span class="p">,</span>
+    <span class="n">Any</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="k">import</span> <span class="n">urlparse</span>
+<span class="kn">from</span> <span class="nn">pymprpc.errors</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">MprpcException</span><span class="p">,</span>
+    <span class="n">abort</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pymprpc.mixins.encoder_decoder_mixin</span> <span class="k">import</span> <span class="n">EncoderDecoderMixin</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">Method</span>
+
+
+<div class="viewcode-block" id="RPC"><a class="viewcode-back" href="../../../pymprpc.client.html#pymprpc.client.RPC">[docs]</a><span class="k">class</span> <span class="nc">RPC</span><span class="p">(</span><span class="n">EncoderDecoderMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;同步的RPC客户端.注意,是单线程实现,不支持心跳操作,也没有连接过期的检验.</span>
+
+<span class="sd">    可以通过设置debug=True规定传输使用json且显示中间过程中的信息.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        SEPARATOR (bytes): - 协议规定的请求响应终止符</span>
+<span class="sd">        VERSION (str): - 协议版本,以`x.x`的形式表现版本</span>
+<span class="sd">        COMPRESERS (Dict[str,model]): - 支持的压缩解压工具</span>
+
+<span class="sd">        username (Optional[str]): - 登录远端的用户名</span>
+<span class="sd">        password (Optional[str]): - 登录远端的密码</span>
+<span class="sd">        hostname (str): - 远端的主机地址</span>
+<span class="sd">        port (int): - 远端的主机端口</span>
+
+<span class="sd">        debug (bool): - 是否使用debug模式</span>
+<span class="sd">        compreser (Optional[str]): - 是否使用压缩工具压缩传输信息,以及压缩工具是什么</span>
+
+<span class="sd">        closed (bool): - 客户端是否已经关闭或者还未开始运转</span>
+<span class="sd">        reader (asyncio.StreamReader): - 流读取对象</span>
+<span class="sd">        writer (asyncio.StreamWriter): - 流写入对象</span>
+<span class="sd">        tasks (Dict[str,asyncio.Future]): - 远端执行的任务,保存以ID为键</span>
+<span class="sd">        gens (Dict[str,Any]): - 远端执行的流返回任务,保存以ID为键</span>
+<span class="sd">        gens_res (Dict[str,List[Any]]): - 远端执行的流返回任务的结果,保存以ID为键</span>
+<span class="sd">        remote_info (Dict[str,Any]): - 通过验证后返回的远端服务信息</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">SEPARATOR</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;##PRO-END##&quot;</span>
+    <span class="n">COMPRESERS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;zlib&quot;</span><span class="p">:</span> <span class="n">zlib</span><span class="p">,</span>
+        <span class="s2">&quot;bz2&quot;</span><span class="p">:</span> <span class="n">bz2</span><span class="p">,</span>
+        <span class="s2">&quot;lzma&quot;</span><span class="p">:</span> <span class="n">lzma</span>
+    <span class="p">}</span>
+    <span class="n">VERSION</span> <span class="o">=</span> <span class="s2">&quot;0.1&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">addr</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                 <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">compreser</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;初始化RPC客户端.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            addr (str): - 形如`tcp://xxx:xxx@xxx:xxx`的字符串</span>
+<span class="sd">            debug (bool): - 是否使用debug模式,默认为否</span>
+<span class="sd">            compreser(Optional[str]): - 是否使用压缩工具压缩传输信息,以及压缩工具是什么,默认为不使用.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pas</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">addr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pas</span><span class="o">.</span><span class="n">scheme</span> <span class="o">!=</span> <span class="s2">&quot;tcp&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">abort</span><span class="p">(</span><span class="mi">505</span><span class="p">,</span> <span class="s2">&quot;unsupported scheme for this protocol&quot;</span><span class="p">)</span>
+        <span class="c1"># public</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">pas</span><span class="o">.</span><span class="n">username</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="n">pas</span><span class="o">.</span><span class="n">password</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hostname</span> <span class="o">=</span> <span class="n">pas</span><span class="o">.</span><span class="n">hostname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">pas</span><span class="o">.</span><span class="n">port</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="n">debug</span>
+        <span class="k">if</span> <span class="n">compreser</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_compreser</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">COMPRESERS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">compreser</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_compreser</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">compreser</span> <span class="o">=</span> <span class="n">_compreser</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;compreser unsupport&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compreser</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reader</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tasks</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remote_info</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># protected</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;entering context&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc</span><span class="p">,</span> <span class="n">tb</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;exit context&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<div class="viewcode-block" id="RPC.connect"><a class="viewcode-back" href="../../../pymprpc.client.html#pymprpc.client.RPC.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;与远端建立连接,并进行验证身份.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">Telnet</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;MPRPC&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">VERSION</span><span class="p">,</span>
+            <span class="s2">&quot;AUTH&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;USERNAME&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+                <span class="s2">&quot;PASSWORD&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="n">queryb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;send auth </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">queryb</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">queryb</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remote_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_responsehandler</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="RPC.reconnect"><a class="viewcode-back" href="../../../pymprpc.client.html#pymprpc.client.RPC.reconnect">[docs]</a>    <span class="k">def</span> <span class="nf">reconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;reconnect to </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="RPC.close"><a class="viewcode-back" href="../../../pymprpc.client.html#pymprpc.client.RPC.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;关闭与远端的连接.</span>
+
+<span class="sd">        判断标志位closed是否为False,如果是则关闭,否则不进行操作</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;close&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;closed&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_responsehandler</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;listenning response!&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">read_until</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SEPARATOR</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status_code_check</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_status_code_check</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;检查响应码并进行对不同的响应进行处理.</span>
+
+<span class="sd">        主要包括:</span>
+<span class="sd">        + 编码在500~599段为服务异常,直接抛出对应异常</span>
+<span class="sd">        + 编码在400~499段为调用异常,为对应ID的future设置异常</span>
+<span class="sd">        + 编码在300~399段为警告,会抛出对应警告</span>
+<span class="sd">        + 编码在200~399段为执行成功响应,将结果设置给对应ID的future.</span>
+<span class="sd">        + 编码在100~199段为服务器响应,主要是处理验证响应和心跳响应</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            response (Dict[str, Any]): - 响应的python字典形式数据</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            (bool): - 如果是非服务异常类的响应,那么返回True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CODE&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;resv:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">response</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">code</span> <span class="o">&gt;=</span> <span class="mi">500</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;server error&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_server_error_handler</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="mi">500</span> <span class="o">&gt;</span> <span class="n">code</span> <span class="o">&gt;=</span> <span class="mi">400</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;call method error&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_error_handler</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="mi">400</span> <span class="o">&gt;</span> <span class="n">code</span> <span class="o">&gt;=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">code</span> <span class="o">&gt;=</span> <span class="mi">300</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_warning_handler</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">code</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">201</span><span class="p">,</span> <span class="mi">202</span><span class="p">,</span> <span class="mi">206</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">301</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;resv resp </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">response</span><span class="p">))</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_method_response_handler</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="mi">200</span> <span class="o">&gt;</span> <span class="n">code</span> <span class="o">&gt;=</span> <span class="mi">100</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_server_response_handler</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">MprpcException</span><span class="p">(</span><span class="s2">&quot;unknow status code </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">code</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_server_error_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;处理500~599段状态码,抛出对应警告.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            (code): - 响应的状态码</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            (bool): - 已知的警告类型则返回True,否则返回False</span>
+
+<span class="sd">        Raise:</span>
+
+<span class="sd">            (ServerException): - 当返回为服务异常时则抛出对应异常</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="n">abort</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_method_error_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;处理400~499段状态码,为对应的任务设置异常</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            (response): - 响应的python字典形式数据</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            (bool): - 准确地说没有错误就会返回True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">exp</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;MESSAGE&#39;</span><span class="p">)</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CODE&quot;</span><span class="p">)</span>
+        <span class="n">ID</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ID&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">abort</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">ID</span><span class="o">=</span><span class="n">ID</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="n">exp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;MESSAGE&#39;</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_warning_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;处理300~399段状态码,抛出对应警告.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            (code): - 响应的状态码</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            (bool): - 已知的警告类型则返回True,否则返回False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">300</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;ExpireWarning&quot;</span><span class="p">,</span>
+                <span class="ne">RuntimeWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">301</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;ExpireStreamWarning&quot;</span><span class="p">,</span>
+                <span class="ne">RuntimeWarning</span><span class="p">,</span>
+                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">3</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;unknow code </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">code</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_method_response_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;处理200~399段状态码,为对应的响应设置结果.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            (response): - 响应的python字典形式数据</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            (bool): - 准确地说没有错误就会返回True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CODE&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">code</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_result_handler</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">code</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">201</span><span class="p">,</span> <span class="mi">301</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gen_result_handler</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_server_response_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;处理100~199段状态码,针对不同的服务响应进行操作</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            (response): - 响应的python字典形式数据</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            (bool): - 准确地说没有错误就会返回True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CODE&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">100</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;auth succeed&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">response</span>
+        <span class="k">if</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">101</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;pong&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="c1"># ---------------------应答结果响应处理-------------------</span>
+    <span class="k">def</span> <span class="nf">_result_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;应答结果响应处理.</span>
+
+<span class="sd">        将结果解析出来设置给任务对应的Future对象上</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            (response): - 响应的python字典形式数据</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            (bool): - 准确地说没有错误就会返回True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;MESSAGE&quot;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;RESULT&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="c1"># -----------------------流式结果响应处理-------------------</span>
+
+    <span class="k">def</span> <span class="nf">_gen_result_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;流式结果响应处理.</span>
+
+<span class="sd">        收到状态码标识201或301的响应后,创建一个生成器用于反映流.</span>
+
+<span class="sd">        Yield:</span>
+
+<span class="sd">            (Any): - 流中的运算结果</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">read_until</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SEPARATOR</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="n">code</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CODE&quot;</span><span class="p">)</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;MESSAGE&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">202</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;RESULT&#39;</span><span class="p">)</span>
+                    <span class="k">yield</span> <span class="n">result</span>
+                <span class="k">if</span> <span class="n">code</span> <span class="o">==</span> <span class="mi">206</span><span class="p">:</span>
+                    <span class="k">break</span>
+
+    <span class="c1"># --------------------------发送请求--------------------------------------</span>
+
+    <span class="k">def</span> <span class="nf">_make_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ID</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">methodname</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;将调用请求的ID,方法名,参数包装为请求数据.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            ID (str): - 任务ID</span>
+<span class="sd">            methodname (str): - 要调用的方法名</span>
+<span class="sd">            args (Any): - 要调用的方法的位置参数</span>
+<span class="sd">            kwargs (Any): - 要调用的方法的关键字参数</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            (Dict[str, Any]) : - 请求的python字典形式</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;MPRPC&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">VERSION</span><span class="p">,</span>
+            <span class="s2">&quot;ID&quot;</span><span class="p">:</span> <span class="n">ID</span><span class="p">,</span>
+            <span class="s2">&quot;METHOD&quot;</span><span class="p">:</span> <span class="n">methodname</span><span class="p">,</span>
+            <span class="s2">&quot;ARGS&quot;</span><span class="p">:</span> <span class="n">args</span><span class="p">,</span>
+            <span class="s2">&quot;KWARGS&quot;</span><span class="p">:</span> <span class="n">kwargs</span>
+        <span class="p">}</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">query</span>
+
+    <span class="k">def</span> <span class="nf">_send_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;将请求编码为字节串发送出去给服务端.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            (query): - 请求的的python字典形式数据</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            (bool): - 准确地说没有错误就会返回True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">queryb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">queryb</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;send query </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">queryb</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="RPC.send_query"><a class="viewcode-back" href="../../../pymprpc.client.html#pymprpc.client.RPC.send_query">[docs]</a>    <span class="k">def</span> <span class="nf">send_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ID</span><span class="p">,</span> <span class="n">methodname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;将调用请求的ID,方法名,参数包装为请求数据后编码为字节串发送出去.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            ID (str): - 任务ID</span>
+<span class="sd">            methodname (str): - 要调用的方法名</span>
+<span class="sd">            args (Any): - 要调用的方法的位置参数</span>
+<span class="sd">            kwargs (Any): - 要调用的方法的关键字参数</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            (bool): - 准确地说没有错误就会返回True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_query</span><span class="p">(</span><span class="n">ID</span><span class="p">,</span> <span class="n">methodname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_send_query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="nf">_query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ID</span><span class="p">,</span> <span class="n">methodname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;将调用请求的ID,方法名,参数包装为请求数据后编码为字节串发送出去.并创建一个Future对象占位.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            ID (str): - 任务ID</span>
+<span class="sd">            methodname (str): - 要调用的方法名</span>
+<span class="sd">            args (Any): - 要调用的方法的位置参数</span>
+<span class="sd">            kwargs (Any): - 要调用的方法的关键字参数</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            (asyncio.Future): - 返回对应ID的Future对象</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_query</span><span class="p">(</span><span class="n">ID</span><span class="p">,</span> <span class="n">methodname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responsehandler</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="RPC.query"><a class="viewcode-back" href="../../../pymprpc.client.html#pymprpc.client.RPC.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">methodname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;异步调用一个远端的函数.</span>
+
+<span class="sd">        为调用创建一个ID,并将调用请求的方法名,参数包装为请求数据后编码为字节串发送出去.并创建一个Future对象占位.</span>
+
+<span class="sd">        Parameters:</span>
+
+<span class="sd">            methodname (str): - 要调用的方法名</span>
+<span class="sd">            args (Any): - 要调用的方法的位置参数</span>
+<span class="sd">            kwargs (Any): - 要调用的方法的关键字参数</span>
+
+<span class="sd">        Return:</span>
+
+<span class="sd">            (asyncio.Future): - 返回对应ID的Future对象</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ID</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_query</span><span class="p">(</span><span class="n">ID</span><span class="o">=</span><span class="n">ID</span><span class="p">,</span> <span class="n">methodname</span><span class="o">=</span><span class="n">methodname</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;运算符`.`重载,让远程函数调用可以使用`.`符号设置要调用的函数.&quot;&quot;&quot;</span>
+        <span class="n">ID</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Method</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">ID</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, hsz.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
