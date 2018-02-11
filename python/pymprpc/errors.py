@@ -11,7 +11,7 @@
     + 2018-01-23 created by hsz
     + 2018-01-23 version-0.5 by hsz
 """
-from pymprpc_client.status_codes import STATUS_CODES
+from pymprpc.status_codes import STATUS_CODES
 
 _mprpc_exceptions = {}  # 注册的异常保存在其中用于查找
 

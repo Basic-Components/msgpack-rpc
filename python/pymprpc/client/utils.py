@@ -15,7 +15,7 @@ from typing import (
     Callable,
     Any
 )
-from pymprpc_client.errors import (
+from pymprpc.errors import (
     UnsupportSysMethodError
 )
 
