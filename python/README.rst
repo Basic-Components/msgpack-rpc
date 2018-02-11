@@ -21,11 +21,14 @@ keywords:rpc,server,tcp
 
 Feature
 ----------------------
-* Feature1
-* Feature2
+* api seems to stdlib xmlrpc
+* easy to use, easy to debug
+* support stream response
 
 Example
 -------------------------------
+
+server
 
 .. code:: python
 
@@ -46,9 +49,11 @@ Documentation
 
 TODO
 -----------------------------------
-* todo
+
+* Load balancing broker
 
 Limitations
 -----------
-* limit
+
+* sync client do not support heartbeat and timeout
 
