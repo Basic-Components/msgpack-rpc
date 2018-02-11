@@ -29,13 +29,16 @@ with open(path.join(HERE, 'README.rst'), encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
 REQUIREMETS_DIR = path.join(HERE, "requirements")
 
-with open(path.join(REQUIREMETS_DIR, REQUIREMETS_FILE), encoding='utf-8') as f:
+with open(path.join(REQUIREMETS_DIR, REQUIREMETS_FILE),
+          encoding='utf-8') as f:
     REQUIREMETS = f.readlines()
 
-with open(path.join(REQUIREMETS_DIR, REQUIREMETS_DEV_FILE), encoding='utf-8') as f:
+with open(path.join(REQUIREMETS_DIR, REQUIREMETS_DEV_FILE),
+          encoding='utf-8') as f:
     REQUIREMETS_DEV = f.readlines()
 
-with open(path.join(REQUIREMETS_DIR, REQUIREMETS_TEST_FILE), encoding='utf-8') as f:
+with open(path.join(REQUIREMETS_DIR, REQUIREMETS_TEST_FILE),
+          encoding='utf-8') as f:
     REQUIREMETS_TEST = f.readlines()
 
 setup(
