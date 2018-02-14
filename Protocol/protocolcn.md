@@ -320,5 +320,45 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
 
 ### 定义中介的交互数据形式
 
+### 身份验证
 
+使用与服务器一致的身份验证.
 
+请求:
+```json
+{
+    "MPRPC":"0.1",// str 协议版本号
+    "AUTH":{
+            "USERNAME":xxx,//string
+            "PASSWORD":xxx//string
+        }
+}
+```
+
+失败响应:
+
+```json
+{
+    "MPRPC":"0.1",// str 协议版本号
+    "CODE":51
+}
+```
+
+成功响应:
+
+```json
+{
+    "MPRPC":"0.1",// str 协议版本号
+    "CODE":50,
+    "URL":xxxxx
+}
+```
+
+### 响应码含义表(参考自http协议)
+
+中介使用0~100间的状态码,其中0~50位请求码段,50~100为响应码段
+
+code|对应错误|意义
+---|---|--
+50|---|验证通过
+51|BrokerLoginError|验证失败
