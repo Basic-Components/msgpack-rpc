@@ -96,10 +96,27 @@ class ServerException(MprpcException):
     """mprpc的服务异常类.
 
     Attributes:
-
         status_code (int): - 状态码
 
     """
+
+    pass
+
+
+class BrokerException(MprpcException):
+    """mprpc的中介异常类.
+
+    Attributes:
+        status_code (int): - 状态码
+
+    """
+
+    pass
+
+
+@add_status_code(51)
+class BrokerLoginError(BrokerException):
+    """登录中介错误."""
 
     pass
 
@@ -197,7 +214,7 @@ class ProtocolException(ServerException):
 
 @add_status_code(506)
 class ProtocolSyntaxException(ServerException):
-    """协议语法错误"""
+    """协议语法错误."""
 
     pass
 

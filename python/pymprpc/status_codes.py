@@ -13,6 +13,8 @@
 """
 
 STATUS_CODES = {
+    50: 'Broker Login Succeed',
+    51: 'Broker Login Error',
     100: 'Continue',
     200: 'OK',
     201: 'Response is Stream',
