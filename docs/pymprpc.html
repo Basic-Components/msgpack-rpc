@@ -4,20 +4,12 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>pymprpc package &#8212; pymprpc  documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -30,8 +22,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head>
-  <body>
+  </head><body>
   
 
     <div class="document">
@@ -98,9 +89,37 @@
 </li>
 </ul>
 <dl class="exception">
+<dt id="pymprpc.errors.BrokerException">
+<em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">BrokerException</code><span class="sig-paren">(</span><em>message: str</em>, <em>status_code: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#BrokerException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.BrokerException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MprpcException" title="pymprpc.errors.MprpcException"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.MprpcException</span></code></a></p>
+<p>mprpc的中介异常类.</p>
+<dl class="attribute">
+<dt id="pymprpc.errors.BrokerException.status_code">
+<code class="descname">status_code</code><a class="headerlink" href="#pymprpc.errors.BrokerException.status_code" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> –</p>
+<ul class="simple">
+<li>状态码</li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="pymprpc.errors.BrokerLoginError">
+<em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">BrokerLoginError</code><span class="sig-paren">(</span><em>message: str</em>, <em>status_code: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#BrokerLoginError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.BrokerLoginError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.BrokerException" title="pymprpc.errors.BrokerException"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.BrokerException</span></code></a></p>
+<p>登录中介错误.</p>
+<dl class="attribute">
+<dt id="pymprpc.errors.BrokerLoginError.status_code">
+<code class="descname">status_code</code><em class="property"> = 51</em><a class="headerlink" href="#pymprpc.errors.BrokerLoginError.status_code" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
 <dt id="pymprpc.errors.LoginError">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">LoginError</code><span class="sig-paren">(</span><em>message: str</em>, <em>status_code: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#LoginError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.LoginError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.ServerException" title="pymprpc.errors.ServerException"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.ServerException</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.ServerException" title="pymprpc.errors.ServerException"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.ServerException</span></code></a></p>
 <p>登录失败异常.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.LoginError.status_code">
@@ -112,7 +131,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.MethodError">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">MethodError</code><span class="sig-paren">(</span><em>message</em>, <em>ID</em>, <em>exception=None</em>, <em>status_code=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#MethodError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.MethodError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MprpcException" title="pymprpc.errors.MprpcException"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.MprpcException</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MprpcException" title="pymprpc.errors.MprpcException"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.MprpcException</span></code></a></p>
 <p>mprpc的远程函数执行异常类.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.MethodError.status_code">
@@ -146,7 +165,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.MprpcException">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">MprpcException</code><span class="sig-paren">(</span><em>message: str</em>, <em>status_code: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#MprpcException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.MprpcException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>mprpc标准异常类.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.MprpcException.status_code">
@@ -162,7 +181,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.NotFindError">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">NotFindError</code><span class="sig-paren">(</span><em>message</em>, <em>ID</em>, <em>exception=None</em>, <em>status_code=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#NotFindError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.NotFindError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MethodError" title="pymprpc.errors.MethodError"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.MethodError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MethodError" title="pymprpc.errors.MethodError"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.MethodError</span></code></a></p>
 <p>未找到对应的函数错误.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.NotFindError.status_code">
@@ -174,7 +193,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.ParamError">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">ParamError</code><span class="sig-paren">(</span><em>message</em>, <em>ID</em>, <em>exception=None</em>, <em>status_code=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#ParamError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.ParamError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MethodError" title="pymprpc.errors.MethodError"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.MethodError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MethodError" title="pymprpc.errors.MethodError"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.MethodError</span></code></a></p>
 <p>请求的参数与签名不符错误.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.ParamError.status_code">
@@ -186,7 +205,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.ProtocolException">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">ProtocolException</code><span class="sig-paren">(</span><em>message: str</em>, <em>status_code: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#ProtocolException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.ProtocolException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.ServerException" title="pymprpc.errors.ServerException"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.ServerException</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.ServerException" title="pymprpc.errors.ServerException"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.ServerException</span></code></a></p>
 <p>协议错误.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.ProtocolException.status_code">
@@ -198,8 +217,8 @@
 <dl class="exception">
 <dt id="pymprpc.errors.ProtocolSyntaxException">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">ProtocolSyntaxException</code><span class="sig-paren">(</span><em>message: str</em>, <em>status_code: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#ProtocolSyntaxException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.ProtocolSyntaxException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.ServerException" title="pymprpc.errors.ServerException"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.ServerException</span></code></a></p>
-<p>协议语法错误</p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.ServerException" title="pymprpc.errors.ServerException"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.ServerException</span></code></a></p>
+<p>协议语法错误.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.ProtocolSyntaxException.status_code">
 <code class="descname">status_code</code><em class="property"> = 506</em><a class="headerlink" href="#pymprpc.errors.ProtocolSyntaxException.status_code" title="Permalink to this definition">¶</a></dt>
@@ -210,7 +229,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.RPCRuntimeError">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">RPCRuntimeError</code><span class="sig-paren">(</span><em>message</em>, <em>ID</em>, <em>exception=None</em>, <em>status_code=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#RPCRuntimeError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.RPCRuntimeError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MethodError" title="pymprpc.errors.MethodError"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.MethodError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MethodError" title="pymprpc.errors.MethodError"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.MethodError</span></code></a></p>
 <p>函数执行错误.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.RPCRuntimeError.status_code">
@@ -222,7 +241,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.RequestError">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">RequestError</code><span class="sig-paren">(</span><em>message</em>, <em>ID</em>, <em>exception=None</em>, <em>status_code=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#RequestError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.RequestError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MethodError" title="pymprpc.errors.MethodError"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.MethodError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MethodError" title="pymprpc.errors.MethodError"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.MethodError</span></code></a></p>
 <p>请求错误.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.RequestError.status_code">
@@ -234,7 +253,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.RequirementException">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">RequirementException</code><span class="sig-paren">(</span><em>message: str</em>, <em>status_code: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#RequirementException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.RequirementException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.ServerException" title="pymprpc.errors.ServerException"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.ServerException</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.ServerException" title="pymprpc.errors.ServerException"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.ServerException</span></code></a></p>
 <p>服务器的依赖服务异常.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.RequirementException.status_code">
@@ -246,7 +265,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.RestrictAccessError">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">RestrictAccessError</code><span class="sig-paren">(</span><em>message</em>, <em>ID</em>, <em>exception=None</em>, <em>status_code=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#RestrictAccessError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.RestrictAccessError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MethodError" title="pymprpc.errors.MethodError"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.MethodError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MethodError" title="pymprpc.errors.MethodError"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.MethodError</span></code></a></p>
 <p>限制访问对应函数错误.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.RestrictAccessError.status_code">
@@ -258,7 +277,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.ResultLimitError">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">ResultLimitError</code><span class="sig-paren">(</span><em>message</em>, <em>ID</em>, <em>exception=None</em>, <em>status_code=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#ResultLimitError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.ResultLimitError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MethodError" title="pymprpc.errors.MethodError"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.MethodError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MethodError" title="pymprpc.errors.MethodError"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.MethodError</span></code></a></p>
 <p>返回的结果超过限制的字节限制错误.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.ResultLimitError.status_code">
@@ -270,7 +289,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.RpcException">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">RpcException</code><span class="sig-paren">(</span><em>message: str</em>, <em>status_code: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#RpcException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.RpcException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.ServerException" title="pymprpc.errors.ServerException"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.ServerException</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.ServerException" title="pymprpc.errors.ServerException"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.ServerException</span></code></a></p>
 <p>服务器异常.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.RpcException.status_code">
@@ -282,7 +301,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.RpcUnavailableException">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">RpcUnavailableException</code><span class="sig-paren">(</span><em>message: str</em>, <em>status_code: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#RpcUnavailableException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.RpcUnavailableException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.ServerException" title="pymprpc.errors.ServerException"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.ServerException</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.ServerException" title="pymprpc.errors.ServerException"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.ServerException</span></code></a></p>
 <p>服务器不可用异常.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.RpcUnavailableException.status_code">
@@ -294,7 +313,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.ServerException">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">ServerException</code><span class="sig-paren">(</span><em>message: str</em>, <em>status_code: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#ServerException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.ServerException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MprpcException" title="pymprpc.errors.MprpcException"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.MprpcException</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MprpcException" title="pymprpc.errors.MprpcException"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.MprpcException</span></code></a></p>
 <p>mprpc的服务异常类.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.ServerException.status_code">
@@ -310,7 +329,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.TimeoutException">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">TimeoutException</code><span class="sig-paren">(</span><em>message: str</em>, <em>status_code: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#TimeoutException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.TimeoutException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.ServerException" title="pymprpc.errors.ServerException"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.ServerException</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.ServerException" title="pymprpc.errors.ServerException"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.ServerException</span></code></a></p>
 <p>服务器连接超时异常.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.TimeoutException.status_code">
@@ -322,7 +341,7 @@
 <dl class="exception">
 <dt id="pymprpc.errors.UnsupportSysMethodError">
 <em class="property">exception </em><code class="descclassname">pymprpc.errors.</code><code class="descname">UnsupportSysMethodError</code><span class="sig-paren">(</span><em>message</em>, <em>ID</em>, <em>exception=None</em>, <em>status_code=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pymprpc/errors.html#UnsupportSysMethodError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pymprpc.errors.UnsupportSysMethodError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MethodError" title="pymprpc.errors.MethodError"><code class="xref py py-class docutils literal"><span class="pre">pymprpc.errors.MethodError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#pymprpc.errors.MethodError" title="pymprpc.errors.MethodError"><code class="xref py py-class docutils literal notranslate"><span class="pre">pymprpc.errors.MethodError</span></code></a></p>
 <p>不支持的服务器固有方法错误.</p>
 <dl class="attribute">
 <dt id="pymprpc.errors.UnsupportSysMethodError.status_code">
@@ -484,12 +503,14 @@
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -500,7 +521,7 @@
       &copy;2017, hsz.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |

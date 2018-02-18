@@ -243,7 +243,6 @@ class MPProtocolServer(asyncio.StreamReaderProtocol, EncoderDecoderMixin):
         time_elapsed = now - self._last_response_time
         if time_elapsed < self.timeout:
             time_left = self.timeout - time_elapsed
-            print(time_left)
             self._timeout_handler = (
                 self._loop.call_later(
                     time_left,
@@ -410,8 +409,7 @@ class MPProtocolServer(asyncio.StreamReaderProtocol, EncoderDecoderMixin):
                 raise LoginError("login error ,unknown username/password")
             return True
 
-            # ----------------------------------RPC调用处理---------------------------------
-
+    # ----------------------------------RPC调用处理---------------------------------
     async def _RPC_handler(self, request: Dict[str, Any]):
         """用于调用函数并执行.同时如果执行出错也负责将错误转化为对应的调用错误返回给客户端.
 
@@ -430,14 +428,18 @@ class MPProtocolServer(asyncio.StreamReaderProtocol, EncoderDecoderMixin):
         """
         ID = request.get("ID")
         method = request.get("METHOD")
+        with_return = request.get("RETURN")
         args = request.get("ARGS") or []
         kwargs = request.get("KWARGS") or {}
         try:
             if method is None:
                 raise RequestError(
                     "request do not have method", request.get("ID"))
-            result = await self.method_wrapper.apply(ID, method,
-                                                     *args, **kwargs)
+            if method == "system.getresult":
+                await self._get_result(ID, *args, **kwargs)
+            else:
+                result = await self.method_wrapper.apply(ID, method,
+                                                         *args, **kwargs)
         except MethodError as se:
             exinfo = traceback.TracebackException.from_exception(
                 se).format(chain=True)
@@ -474,24 +476,25 @@ class MPProtocolServer(asyncio.StreamReaderProtocol, EncoderDecoderMixin):
                         ID, e.__class__.__name__, str(e))
                 )
         else:
-            if inspect.isasyncgen(result):
-                await self._asyncgen_wrap(result, ID)
-            else:
-                response = {
-                    "MPRPC": self.VERSION,
-                    "CODE": 200,
-                    "MESSAGE": {
-                        "ID": ID,
-                        'RESULT': result
+            if with_return:
+                if inspect.isasyncgen(result):
+                    await self._asyncgen_wrap(result, ID)
+                else:
+                    response = {
+                        "MPRPC": self.VERSION,
+                        "CODE": 200,
+                        "MESSAGE": {
+                            "ID": ID,
+                            'RESULT': result
+                        }
                     }
-                }
-                self.writer(response)
-                if self.debug:
-                    access_logger.info(
-                        "Task[{}]: response answered".format(ID),
-                        extra=self._extra
-                    )
-            return True
+                    self.writer(response)
+                    if self.debug:
+                        access_logger.info(
+                            "Task[{}]: response answered".format(ID),
+                            extra=self._extra
+                        )
+            return result
 
     async def _asyncgen_wrap(self, cor: AsyncIterator, ID: str):
         """流包装器.
@@ -548,3 +551,27 @@ class MPProtocolServer(asyncio.StreamReaderProtocol, EncoderDecoderMixin):
                 extra=self._extra
             )
         return True
+
+    # ---------------------------------getresult----------------------------------
+    async def _get_result(self, ID, _ID):
+        try:
+            result = await self.tasks[_ID]
+            if inspect.isasyncgen(result):
+                await self._asyncgen_wrap(result, _ID)
+            else:
+                response = {
+                    "MPRPC": self.VERSION,
+                    "CODE": 200,
+                    "MESSAGE": {
+                        "ID": ID,
+                        'RESULT': result
+                    }
+                }
+                self.writer(response)
+                if self.debug:
+                    access_logger.info(
+                        "Task[{}]: response answered".format(ID),
+                        extra=self._extra
+                    )
+        except Exception as e:
+            print(e)

@@ -4,20 +4,12 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Welcome to pymprpc’s documentation! &#8212; pymprpc  documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -31,8 +23,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head>
-  <body>
+  </head><body>
   
 
     <div class="document">
@@ -62,6 +53,12 @@
 <li class="toctree-l3"><a class="reference internal" href="protocolcn.html#">服务器可设置参数:</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="protocolcn.html#">负载均衡方案(未定义)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="protocolcn.html#">定义中介的交互数据形式(未定义)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="protocolcn.html#">身份验证(未定义)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="protocolcn.html#http">响应码含义表(参考自http协议)(未定义)</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -86,7 +83,7 @@
 <li>register_instance 用于注册某个类的实例,会将其中的公开函数都注册到可调用位置.</li>
 </ul>
 <p>要启动服务器,则可以执行`run_forever`方法.当要退出的时候,上下文管理器会自己关闭服务并做清理工作.</p>
-<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">MyMPRPCServer</span><span class="p">((</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="mi">5000</span><span class="p">),</span> <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">server</span><span class="p">:</span>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">MyMPRPCServer</span><span class="p">((</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="mi">5000</span><span class="p">),</span> <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">server</span><span class="p">:</span>
     <span class="n">server</span><span class="o">.</span><span class="n">register_introspection_functions</span><span class="p">()</span>
 
     <span class="nd">@server</span><span class="o">.</span><span class="n">register_function</span><span class="p">()</span>
@@ -141,7 +138,7 @@
 <div class="section" id="id6">
 <h4>同步<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h4>
 <p>同步接口只要直接调用即可,如果返回的是流,那么获得的结果将会是一个生成器,可以通过遍历来获取全部值.</p>
-<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">RPC</span><span class="p">(</span><span class="n">addr</span><span class="o">=</span><span class="s2">&quot;tcp://admin:admin@127.0.0.1:5000&quot;</span><span class="p">,</span>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">RPC</span><span class="p">(</span><span class="n">addr</span><span class="o">=</span><span class="s2">&quot;tcp://admin:admin@127.0.0.1:5000&quot;</span><span class="p">,</span>
          <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">rpc</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">listMethods</span><span class="p">())</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">rpc</span><span class="o">.</span><span class="n">system</span><span class="o">.</span><span class="n">methodSignature</span><span class="p">(</span><span class="s2">&quot;testclassmethod&quot;</span><span class="p">))</span>
@@ -161,8 +158,8 @@
 <div class="section" id="id7">
 <h4>异步<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h4>
 <p>异步接口有一个需要注意的点,就是如果返回的是流,那么会被包装成一个异步生成器,
-需要使用`async for`语句来调用.</p>
-<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">with</span> <span class="n">AsyncRPC</span><span class="p">(</span>
+需要使用`async for`语句来调用.另外异步接口允许不返回,这样一些不要返回值的方法比如邮件发送什么的就可以直接这样调用以提高效率.</p>
+<div class="code python highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">with</span> <span class="n">AsyncRPC</span><span class="p">(</span>
         <span class="n">addr</span><span class="o">=</span><span class="s2">&quot;tcp://admin:admin@127.0.0.1:5000&quot;</span><span class="p">,</span>
         <span class="n">loop</span><span class="o">=</span><span class="n">loop</span><span class="p">,</span>
         <span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -281,12 +278,14 @@
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -297,7 +296,7 @@
       &copy;2017, hsz.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
       |

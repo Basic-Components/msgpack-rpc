@@ -59,6 +59,7 @@ class RPC(EncoderDecoderMixin):
         remote_info (Dict[str,Any]): - 通过验证后返回的远端服务信息
 
     """
+
     SEPARATOR = b"##PRO-END##"
     COMPRESERS = {
         "zlib": zlib,
@@ -134,6 +135,7 @@ class RPC(EncoderDecoderMixin):
         self.remote_info = self._responsehandler()
 
     def reconnect(self):
+        """断线重连."""
         self.closed = True
         self.connect()
         if self.debug:
@@ -177,11 +179,9 @@ class RPC(EncoderDecoderMixin):
         + 编码在100~199段为服务器响应,主要是处理验证响应和心跳响应
 
         Parameters:
-
             response (Dict[str, Any]): - 响应的python字典形式数据
 
         Return:
-
             (bool): - 如果是非服务异常类的响应,那么返回True
 
         """
@@ -217,29 +217,24 @@ class RPC(EncoderDecoderMixin):
         """处理500~599段状态码,抛出对应警告.
 
         Parameters:
-
             (code): - 响应的状态码
 
         Return:
-
             (bool): - 已知的警告类型则返回True,否则返回False
 
         Raise:
-
             (ServerException): - 当返回为服务异常时则抛出对应异常
 
         """
         raise abort(code)
 
     def _method_error_handler(self, response: Dict[str, Any]):
-        """处理400~499段状态码,为对应的任务设置异常
+        """处理400~499段状态码,为对应的任务设置异常.
 
         Parameters:
-
             (response): - 响应的python字典形式数据
 
         Return:
-
             (bool): - 准确地说没有错误就会返回True
 
         """
@@ -252,11 +247,9 @@ class RPC(EncoderDecoderMixin):
         """处理300~399段状态码,抛出对应警告.
 
         Parameters:
-
             (code): - 响应的状态码
 
         Return:
-
             (bool): - 已知的警告类型则返回True,否则返回False
 
         """
@@ -282,11 +275,9 @@ class RPC(EncoderDecoderMixin):
         """处理200~399段状态码,为对应的响应设置结果.
 
         Parameters:
-
             (response): - 响应的python字典形式数据
 
         Return:
-
             (bool): - 准确地说没有错误就会返回True
 
         """
@@ -297,14 +288,12 @@ class RPC(EncoderDecoderMixin):
             return self._gen_result_handler()
 
     def _server_response_handler(self, response: Dict[str, Any]):
-        """处理100~199段状态码,针对不同的服务响应进行操作
+        """处理100~199段状态码,针对不同的服务响应进行操作.
 
         Parameters:
-
             (response): - 响应的python字典形式数据
 
         Return:
-
             (bool): - 准确地说没有错误就会返回True
 
         """
@@ -325,11 +314,9 @@ class RPC(EncoderDecoderMixin):
         将结果解析出来设置给任务对应的Future对象上
 
         Parameters:
-
             (response): - 响应的python字典形式数据
 
         Return:
-
             (bool): - 准确地说没有错误就会返回True
 
         """
@@ -345,7 +332,6 @@ class RPC(EncoderDecoderMixin):
         收到状态码标识201或301的响应后,创建一个生成器用于反映流.
 
         Yield:
-
             (Any): - 流中的运算结果
 
         """
@@ -370,14 +356,12 @@ class RPC(EncoderDecoderMixin):
         """将调用请求的ID,方法名,参数包装为请求数据.
 
         Parameters:
-
             ID (str): - 任务ID
             methodname (str): - 要调用的方法名
             args (Any): - 要调用的方法的位置参数
             kwargs (Any): - 要调用的方法的关键字参数
 
         Return:
-
             (Dict[str, Any]) : - 请求的python字典形式
 
         """
@@ -385,6 +369,7 @@ class RPC(EncoderDecoderMixin):
             "MPRPC": self.VERSION,
             "ID": ID,
             "METHOD": methodname,
+            "RETURN": True,
             "ARGS": args,
             "KWARGS": kwargs
         }
@@ -395,11 +380,9 @@ class RPC(EncoderDecoderMixin):
         """将请求编码为字节串发送出去给服务端.
 
         Parameters:
-
             (query): - 请求的的python字典形式数据
 
         Return:
-
             (bool): - 准确地说没有错误就会返回True
 
         """
@@ -414,7 +397,6 @@ class RPC(EncoderDecoderMixin):
         """将调用请求的ID,方法名,参数包装为请求数据后编码为字节串发送出去.
 
         Parameters:
-
             ID (str): - 任务ID
             methodname (str): - 要调用的方法名
             args (Any): - 要调用的方法的位置参数
@@ -429,11 +411,23 @@ class RPC(EncoderDecoderMixin):
         self._send_query(query)
         return True
 
+    # def delay(self, methodname, *args, **kwargs):
+    #     """调用但不要求返回结果,而是通过系统方法getresult来获取.
+
+    #     Parameters:
+    #         methodname (str): - 要调用的方法名
+    #         args (Any): - 要调用的方法的位置参数
+    #         kwargs (Any): - 要调用的方法的关键字参数
+
+    #     """
+    #     ID = str(uuid.uuid4())
+    #     self.send_query(ID, methodname, False, *args, **kwargs)
+    #     return ID
+
     def _query(self, ID, methodname, *args, **kwargs):
         """将调用请求的ID,方法名,参数包装为请求数据后编码为字节串发送出去.并创建一个Future对象占位.
 
         Parameters:
-
             ID (str): - 任务ID
             methodname (str): - 要调用的方法名
             args (Any): - 要调用的方法的位置参数
@@ -445,7 +439,7 @@ class RPC(EncoderDecoderMixin):
 
         """
         self.send_query(ID, methodname, *args, **kwargs)
-        result = self.responsehandler()
+        result = self._responsehandler()
         return result
 
     def query(self, methodname, *args, **kwargs):
@@ -454,13 +448,11 @@ class RPC(EncoderDecoderMixin):
         为调用创建一个ID,并将调用请求的方法名,参数包装为请求数据后编码为字节串发送出去.并创建一个Future对象占位.
 
         Parameters:
-
             methodname (str): - 要调用的方法名
             args (Any): - 要调用的方法的位置参数
             kwargs (Any): - 要调用的方法的关键字参数
 
         Return:
-
             (asyncio.Future): - 返回对应ID的Future对象
 
         """

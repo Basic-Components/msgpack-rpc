@@ -78,6 +78,7 @@ class BaseServer:
         graceful_shutdown_timeout (int): - 优雅关闭的时间
 
     """
+
     version = "0.0.1"
 
     def __init__(self,
@@ -94,7 +95,6 @@ class BaseServer:
         """初始化服务器设置.
 
         Parameters:
-
             addr (Tuple[str, int]): - 服务器启动地址
             loop (Optional[asyncio.AbstractEventLoop]): - 启动服务的事件循环,默认为None
             func_executor (Optional[futures.Executor]): - 函数,方法等的执行器,
@@ -215,8 +215,7 @@ class BaseServer:
 
     # --------------------自省--------------------------------
     def register_introspection_functions(self)->None:
-        """注册自省函数到函数字典.
-        """
+        """注册自省函数到函数字典."""
         self.funcs.update({
             'system.listMethods': self.system_listMethods,
             'system.methodSignature': self.system_methodSignature,
@@ -226,9 +225,11 @@ class BaseServer:
         })
 
     def system_lenConnections(self)->int:
+        """获取所有的连接数目."""
         return len(MPProtocolServer.CONNECTIONS)
 
     def system_lenUndoneTasks(self)->int:
+        """获取未完成的任务数目."""
         return len([i for i in MPProtocolServer.TASKS if not i.done()])
 
     def system_listMethods(self)->List[str]:
@@ -236,8 +237,10 @@ class BaseServer:
 
         system.listMethods() => ['add', 'subtract', 'multiple']
 
-        Returns a list of the methods supported by the server."""
+        Return:
+            (list): - 被注册的可调用函数
 
+        """
         methods = set(self.funcs.keys())
         if self.instance is not None:
             if hasattr(self.instance, '_listMethods'):
@@ -247,13 +250,17 @@ class BaseServer:
         return sorted(methods)
 
     def system_methodSignature(self, method_name: str)->str:
-        """system.methodSignature('add') => [double, int, int]
+        """获取函数的签名.
 
-        Returns a list describing the signature of the method. In the
-        above example, the add method takes two integers as arguments
-        and returns a double result.
+        system.methodSignature('add') => [double, int, int]
 
-        This server does NOT support system.methodSignature."""
+        Parameters:
+            method_name (str): - 要查看的函数名
+
+        Returns:
+            (str): - 签名文本
+
+        """
         method = None
         if method_name in self.funcs:
             method = self.funcs[method_name]
@@ -276,7 +283,10 @@ class BaseServer:
 
         system.methodHelp('add') => "Adds two integers together"
 
-        Returns a string containing documentation for the specified method."""
+        Return:
+            (str): - 函数的帮助文本
+
+        """
         method = None
         if method_name in self.funcs:
             method = self.funcs[method_name]
@@ -298,6 +308,11 @@ class BaseServer:
 
     def register_instance(self, instance: Any, allow_dotted_names: bool=False):
         """注册一个实例用于执行,注意只能注册一个.
+
+        Parameters:
+            instance (Any): - 将一个类的实例注册到rpc
+            allow_dotted_names (bool): 是否允许带`.`号的名字
+
         """
         if self.instance:
             raise RuntimeError("can only register one instance")
@@ -306,7 +321,11 @@ class BaseServer:
         return True
 
     def register_function(self, name: Optional[str]=None):
-        """注册函数
+        """注册函数.
+
+        Parameters:
+            name (Optional[str]): - 将函数注册到的名字,如果为None,name就用其原来的名字
+
         """
         def wrap(function: Callable)->Any:
             nonlocal name
@@ -317,19 +336,34 @@ class BaseServer:
         return wrap
 
     def set_executor(self, executor: futures.Executor):
-        """设置计算密集型任务的执行器
+        """设置计算密集型任务的执行器.
+
+        Parameters:
+            executor (futures.Executor): - 函数调用的执行器
+
         """
         self.loop.set_default_executor(executor)
         self._func_executor = executor
         return True
 
-    async def apply(self, ID, method: str, *args: Any, **kwargs: Any):
+    async def apply(self, ID: str, method: str, *args: Any, **kwargs: Any):
         """执行注册的函数或者实例的方法.
 
         如果函数或者方法是协程则执行协程,如果是函数则使用执行器执行,默认使用的是多进程.
 
-        """
+        Parameters:
+            ID (str): 任务的ID
+            method (str): 任务调用的函数名
+            args (Any): 位置参数
+            kwargs (Any): 关键字参数
 
+        Raise:
+            (RPCRuntimeError): - 当执行调用后抛出了异常,那就算做RPC运行时异常
+
+        Return:
+            (Any): - 被调用函数的返回
+
+        """
         func = None
         try:
             # check to see if a matching function has been registered

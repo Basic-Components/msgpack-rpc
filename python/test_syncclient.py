@@ -17,10 +17,10 @@ def main():
         agen = rpc.testcorogen(1, 2)
         for i in agen:
             print(i)
-        time.sleep(200)
-        print("wait done")
-        # rpc.close()
-        print(rpc.testfunc())
+        # time.sleep(200)
+        # print("wait done")
+        # # rpc.close()
+        # print(rpc.testfunc())
 
     print("end")
 

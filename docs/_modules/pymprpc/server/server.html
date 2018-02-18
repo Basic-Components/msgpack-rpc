@@ -4,20 +4,12 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en">
   <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>pymprpc.server.server &#8212; pymprpc  documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../../',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
@@ -30,8 +22,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head>
-  <body>
+  </head><body>
   
 
     <div class="document">
@@ -120,6 +111,7 @@
 <span class="sd">        graceful_shutdown_timeout (int): - 优雅关闭的时间</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">version</span> <span class="o">=</span> <span class="s2">&quot;0.0.1&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -136,7 +128,6 @@
         <span class="sd">&quot;&quot;&quot;初始化服务器设置.</span>
 
 <span class="sd">        Parameters:</span>
-
 <span class="sd">            addr (Tuple[str, int]): - 服务器启动地址</span>
 <span class="sd">            loop (Optional[asyncio.AbstractEventLoop]): - 启动服务的事件循环,默认为None</span>
 <span class="sd">            func_executor (Optional[futures.Executor]): - 函数,方法等的执行器,</span>
@@ -257,8 +248,7 @@
 
     <span class="c1"># --------------------自省--------------------------------</span>
     <span class="k">def</span> <span class="nf">register_introspection_functions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;注册自省函数到函数字典.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;注册自省函数到函数字典.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">funcs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
             <span class="s1">&#39;system.listMethods&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">system_listMethods</span><span class="p">,</span>
             <span class="s1">&#39;system.methodSignature&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">system_methodSignature</span><span class="p">,</span>
@@ -268,9 +258,11 @@
         <span class="p">})</span>
 
     <span class="k">def</span> <span class="nf">system_lenConnections</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;获取所有的连接数目.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">MPProtocolServer</span><span class="o">.</span><span class="n">CONNECTIONS</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">system_lenUndoneTasks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;获取未完成的任务数目.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">MPProtocolServer</span><span class="o">.</span><span class="n">TASKS</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span><span class="o">.</span><span class="n">done</span><span class="p">()])</span>
 
     <span class="k">def</span> <span class="nf">system_listMethods</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -278,8 +270,10 @@
 
 <span class="sd">        system.listMethods() =&gt; [&#39;add&#39;, &#39;subtract&#39;, &#39;multiple&#39;]</span>
 
-<span class="sd">        Returns a list of the methods supported by the server.&quot;&quot;&quot;</span>
+<span class="sd">        Return:</span>
+<span class="sd">            (list): - 被注册的可调用函数</span>
 
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">methods</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">funcs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">,</span> <span class="s1">&#39;_listMethods&#39;</span><span class="p">):</span>
@@ -289,13 +283,17 @@
         <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">methods</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">system_methodSignature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span><span class="o">-&gt;</span><span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;system.methodSignature(&#39;add&#39;) =&gt; [double, int, int]</span>
+        <span class="sd">&quot;&quot;&quot;获取函数的签名.</span>
 
-<span class="sd">        Returns a list describing the signature of the method. In the</span>
-<span class="sd">        above example, the add method takes two integers as arguments</span>
-<span class="sd">        and returns a double result.</span>
+<span class="sd">        system.methodSignature(&#39;add&#39;) =&gt; [double, int, int]</span>
 
-<span class="sd">        This server does NOT support system.methodSignature.&quot;&quot;&quot;</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            method_name (str): - 要查看的函数名</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (str): - 签名文本</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">method</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">method_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">funcs</span><span class="p">:</span>
             <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">funcs</span><span class="p">[</span><span class="n">method_name</span><span class="p">]</span>
@@ -318,7 +316,10 @@
 
 <span class="sd">        system.methodHelp(&#39;add&#39;) =&gt; &quot;Adds two integers together&quot;</span>
 
-<span class="sd">        Returns a string containing documentation for the specified method.&quot;&quot;&quot;</span>
+<span class="sd">        Return:</span>
+<span class="sd">            (str): - 函数的帮助文本</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">method</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">method_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">funcs</span><span class="p">:</span>
             <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">funcs</span><span class="p">[</span><span class="n">method_name</span><span class="p">]</span>
@@ -340,6 +341,11 @@
 
     <span class="k">def</span> <span class="nf">register_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">allow_dotted_names</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;注册一个实例用于执行,注意只能注册一个.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            instance (Any): - 将一个类的实例注册到rpc</span>
+<span class="sd">            allow_dotted_names (bool): 是否允许带`.`号的名字</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">instance</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;can only register one instance&quot;</span><span class="p">)</span>
@@ -348,7 +354,11 @@
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">register_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;注册函数</span>
+        <span class="sd">&quot;&quot;&quot;注册函数.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            name (Optional[str]): - 将函数注册到的名字,如果为None,name就用其原来的名字</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="n">function</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">Any</span><span class="p">:</span>
             <span class="k">nonlocal</span> <span class="n">name</span>
@@ -359,19 +369,34 @@
         <span class="k">return</span> <span class="n">wrap</span>
 
     <span class="k">def</span> <span class="nf">set_executor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">executor</span><span class="p">:</span> <span class="n">futures</span><span class="o">.</span><span class="n">Executor</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;设置计算密集型任务的执行器</span>
+        <span class="sd">&quot;&quot;&quot;设置计算密集型任务的执行器.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            executor (futures.Executor): - 函数调用的执行器</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loop</span><span class="o">.</span><span class="n">set_default_executor</span><span class="p">(</span><span class="n">executor</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_func_executor</span> <span class="o">=</span> <span class="n">executor</span>
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">async</span> <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ID</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ID</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;执行注册的函数或者实例的方法.</span>
 
 <span class="sd">        如果函数或者方法是协程则执行协程,如果是函数则使用执行器执行,默认使用的是多进程.</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            ID (str): 任务的ID</span>
+<span class="sd">            method (str): 任务调用的函数名</span>
+<span class="sd">            args (Any): 位置参数</span>
+<span class="sd">            kwargs (Any): 关键字参数</span>
 
+<span class="sd">        Raise:</span>
+<span class="sd">            (RPCRuntimeError): - 当执行调用后抛出了异常,那就算做RPC运行时异常</span>
+
+<span class="sd">        Return:</span>
+<span class="sd">            (Any): - 被调用函数的返回</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">func</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># check to see if a matching function has been registered</span>
@@ -457,12 +482,14 @@
 </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -473,7 +500,7 @@
       &copy;2017, hsz.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
     </div>

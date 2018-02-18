@@ -50,15 +50,18 @@ class Method:
 
     def __call__(self, *args: Any, **kwargs: Any):
         """执行发送任务.
+
         Parameters:
             args (Any): - 远端名字是<name>的函数的位置参数
             kwargs (Any): - 远端名字是<name>的函数的关键字参数
 
         Return:
             (Any): - 发送函数send的返回值
+
         """
         sys_method = ("listMethods", "methodSignature",
-                      'methodHelp', 'lenConnections', 'lenUndoneTasks')
+                      'methodHelp', 'lenConnections',
+                      'lenUndoneTasks', 'getresult')
         if self.__name.startswith("system."):
             if self.__name.split(".")[-1] not in sys_method:
                 raise UnsupportSysMethodError(

@@ -19,7 +19,6 @@ MESSAGE-PACK-RPC是一个轻量级的无状态远程过程调用(RPC)应用层�
 
 注意流操作依然是使用的一般的应答,而非流式服务器.
 
-
 其他的特性包括:
 
 + 服务器端对连接建立的客户端可以有权限检验,也就是说可以设定口令
@@ -34,7 +33,7 @@ MESSAGE-PACK-RPC是一个轻量级的无状态远程过程调用(RPC)应用层�
 
 + 可以在通信中进行使用`bz2`或者`zlib`或者`lzma`进行数据压缩.
 
-+ 协议不支持批量调用.
++ 请求可以设置Return字段,默认为True,表示要求返回响应为结果,如果设置为False,则不必返回任何结果,而是通过方法`system.getresult`获取结果
 
 ## 流程约定
 
@@ -173,6 +172,7 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
         "MPRPC":"0.1",// string 协议版本号
         "ID":xxxx,//string 任务id
         "METHOD": xxx,//接收到要执行的函数名
+        "RETURN":True,//默认为True,表示会返回结果,设置为False则表示不用返回结果,要结果的话可以用system.getresult获取
         "ARGS":xxx //(OPTION) list 接收到函数调用的参数,只允许为列表形式,如果有stream则无效
         "KWARGS":xxx //(OPTION) dict 接收到函数调用的参数,键值对的形式,如果有stream则无效
     }
@@ -286,6 +286,10 @@ JSON可以表示四个基本类型(String、Numbers、Booleans和Null)和两个�
 + system.lenUndoneTasks()->int:
         
     当前还未完成的任务数
+
++ system.getresult(ID:str)->Any:
+
+    获取某个ID对应的任务结果
 
 
 ### 客户端可设置参数:

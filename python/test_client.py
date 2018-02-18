@@ -20,11 +20,16 @@ async def main(loop):
         agen = await rpc.testcorogen(1, 2)
         async for i in agen:
             print(i)
-        await asyncio.sleep(200)
-        print("wait done")
-        rpc.close()
+        # #await asyncio.sleep(200)
+        #print("wait done")
+        # rpc.close()
 
         # print(await rpc.testfunc())
+        uid = rpc.delay("testfunc", 2, 3)
+        print(uid)
+        await asyncio.sleep(0.5)
+        print('####')
+        print(await rpc.system.getresult(uid))
 
     print("end")
 loop = asyncio.get_event_loop()
